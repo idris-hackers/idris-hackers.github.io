@@ -25,7 +25,64 @@
 --   <li>Hugs style interactive environment</li>
 --   </ul>
 @package idris
-@version 0.9.6.1
+@version 0.9.8.1
+
+module Idris.Help
+data CmdArg
+
+-- | The command takes an expression
+ExprArg :: CmdArg
+
+-- | The command takes a name
+NameArg :: CmdArg
+
+-- | The command takes a file
+FileArg :: CmdArg
+
+-- | The command takes a module name
+ModuleArg :: CmdArg
+
+-- | The command takes an option
+OptionArg :: CmdArg
+
+-- | The command takes a metavariable
+MetaVarArg :: CmdArg
+
+-- | No completion (yet!?)
+NoArg :: CmdArg
+
+-- | do not use
+SpecialHeaderArg :: CmdArg
+help :: [([String], CmdArg, String)]
+instance Show CmdArg
+
+module Idris.IdeSlave
+parseMessage :: String -> (SExp, Integer)
+convSExp :: SExpable a => String -> a -> Integer -> String
+data IdeSlaveCommand
+REPLCompletions :: String -> IdeSlaveCommand
+Interpret :: String -> IdeSlaveCommand
+LoadFile :: String -> IdeSlaveCommand
+sexpToCommand :: SExp -> Maybe IdeSlaveCommand
+toSExp :: SExpable a => a -> SExp
+data SExp
+SexpList :: [SExp] -> SExp
+StringAtom :: String -> SExp
+BoolAtom :: Bool -> SExp
+IntegerAtom :: Integer -> SExp
+SymbolAtom :: String -> SExp
+instance [incoherent] Eq SExp
+instance [incoherent] Show SExp
+instance [incoherent] Show IdeSlaveCommand
+instance [incoherent] (SExpable a, SExpable b, SExpable c) => SExpable (a, b, c)
+instance [incoherent] (SExpable a, SExpable b) => SExpable (a, b)
+instance [incoherent] SExpable a => SExpable [a]
+instance [incoherent] SExpable a => SExpable (Maybe a)
+instance [incoherent] SExpable Int
+instance [incoherent] SExpable Integer
+instance [incoherent] SExpable String
+instance [incoherent] SExpable Bool
+instance [incoherent] SExpable SExp
 
 module Util.Pretty
 class Sized a
@@ -47,14 +104,34 @@ getDataDir :: IO FilePath
 getLibexecDir :: IO FilePath
 getDataFileName :: FilePath -> IO FilePath
 
+
+-- | Platform-specific dynamic linking support. Add new platforms to this
+--   file through conditional compilation.
+module Util.DynamicLinker
+hostDynamicLibExt :: String
+data ForeignFun
+Fun :: String -> FunPtr a -> ForeignFun
+fun_name :: ForeignFun -> String
+fun_handle :: ForeignFun -> FunPtr a
+data DynamicLib
+Lib :: String -> DL -> DynamicLib
+lib_name :: DynamicLib -> String
+lib_handle :: DynamicLib -> DL
+tryLoadLib :: String -> IO (Maybe DynamicLib)
+tryLoadFn :: String -> DynamicLib -> IO (Maybe ForeignFun)
+
 module Util.System
 tempfile :: IO (FilePath, Handle)
+withTempdir :: String -> (FilePath -> IO a) -> IO a
 environment :: String -> IO (Maybe String)
 getCC :: IO String
 getLibFlags :: IO [Char]
 getIdrisLibDir :: IO FilePath
 getIncFlags :: IO [Char]
 rmFile :: FilePath -> IO ()
+getMvn :: IO String
+getExecutablePom :: IO FilePath
+catchIO :: IO a -> (IOError -> IO a) -> IO a
 
 
 -- | TT is the core language of Idris. The language has:
@@ -95,6 +172,8 @@ InternalMsg :: String -> Err
 CantUnify :: Bool -> Term -> Term -> Err -> [(Name, Type)] -> Int -> Err
 InfiniteUnify :: Name -> Term -> [(Name, Type)] -> Err
 CantConvert :: Term -> Term -> [(Name, Type)] -> Err
+NonFunctionType :: Term -> Term -> Err
+CantIntroduce :: Term -> Err
 NoSuchVariable :: Name -> Err
 NoTypeDecl :: Name -> Err
 NotInjective :: Term -> Term -> Term -> Err
@@ -107,7 +186,9 @@ Inaccessible :: Name -> Err
 NonCollapsiblePostulate :: Name -> Err
 AlreadyDefined :: Name -> Err
 ProofSearchFail :: Err -> Err
+NoRewriting :: Term -> Err
 At :: FC -> Err -> Err
+ProviderError :: String -> Err
 score :: Err -> Int
 data TC a
 OK :: a -> TC a
@@ -156,8 +237,8 @@ addDef :: Name -> a -> Ctxt a -> Ctxt a
 --   which match it and ignore the given namespace.</li>
 --   <li>otherwise, return all names.</li>
 --   </ul>
-lookupCtxtName :: Maybe [String] -> Name -> Ctxt a -> [(Name, a)]
-lookupCtxt :: Maybe [String] -> Name -> Ctxt a -> [a]
+lookupCtxtName :: Name -> Ctxt a -> [(Name, a)]
+lookupCtxt :: Name -> Ctxt a -> [a]
 updateDef :: Name -> (a -> a) -> Ctxt a -> Ctxt a
 toAlist :: Ctxt a -> [(Name, a)]
 addAlist :: Show a => [(Name, a)] -> Ctxt a -> Ctxt a
@@ -274,7 +355,11 @@ type UCs = (Int, [UConstraint])
 data NameType
 Bound :: NameType
 Ref :: NameType
+
+-- | Data constructor; Ints are tag and arity
 DCon :: Int -> Int -> NameType
+
+-- | Type constructor; Ints are tag and arity
 TCon :: Int -> Int -> NameType
 
 -- | Terms in the core language
@@ -327,6 +412,7 @@ instantiate :: TT n -> TT n -> TT n
 explicitNames :: TT n -> TT n
 pToV :: Eq n => n -> TT n -> TT n
 pToV' :: Eq n => n -> Int -> TT n -> TT n
+addBinder :: TT n -> TT n
 
 -- | Convert several names. First in the list comes out as V 0
 pToVs :: Eq n => [n] -> TT n -> TT n
@@ -450,10 +536,18 @@ data CaseDef
 CaseDef :: [Name] -> SC -> [Term] -> CaseDef
 type SC = SC' Term
 data SC' t
+
+-- | invariant: lowest tags first
 Case :: Name -> [CaseAlt' t] -> SC' t
+
+-- | special case for projections
 ProjCase :: t -> [CaseAlt' t] -> SC' t
 STerm :: t -> SC' t
+
+-- | error message
 UnmatchedCase :: String -> SC' t
+
+-- | already checked to be impossible
 ImpossibleCase :: SC' t
 type CaseAlt = CaseAlt' Term
 data CaseAlt' t
@@ -556,31 +650,44 @@ addToCtxt :: Name -> Term -> Type -> Context -> Context
 setAccess :: Name -> Accessibility -> Context -> Context
 setTotal :: Name -> Totality -> Context -> Context
 addCtxtDef :: Name -> Def -> Context -> Context
-addTyDecl :: Name -> Type -> Context -> Context
+addTyDecl :: Name -> NameType -> Type -> Context -> Context
 addDatatype :: Datatype Name -> Context -> Context
 addCasedef :: Name -> Bool -> Bool -> Bool -> Bool -> [Either Term (Term, Term)] -> [([Name], Term, Term)] -> [([Name], Term, Term)] -> Type -> Context -> Context
 simplifyCasedef :: Name -> Context -> Context
 addOperator :: Name -> Type -> Int -> ([Value] -> Maybe Value) -> Context -> Context
-lookupNames :: Maybe [String] -> Name -> Context -> [Name]
-lookupTy :: Maybe [String] -> Name -> Context -> [Type]
-lookupP :: Maybe [String] -> Name -> Context -> [Term]
-lookupDef :: Maybe [String] -> Name -> Context -> [Def]
-lookupVal :: Maybe [String] -> Name -> Context -> [Value]
+lookupNames :: Name -> Context -> [Name]
+lookupTy :: Name -> Context -> [Type]
+lookupP :: Name -> Context -> [Term]
+lookupDef :: Name -> Context -> [Def]
+lookupVal :: Name -> Context -> [Value]
 lookupTotal :: Name -> Context -> [Totality]
 lookupTyEnv :: Name -> Env -> Maybe (Int, Type)
-isConName :: Maybe [String] -> Name -> Context -> Bool
-isFnName :: Maybe [String] -> Name -> Context -> Bool
+isConName :: Name -> Context -> Bool
+isFnName :: Name -> Context -> Bool
 
 -- | A HOAS representation of values
 data Value
 VP :: NameType -> Name -> Value -> Value
 VV :: Int -> Value
-VBind :: Name -> (Binder Value) -> (Value -> Eval Value) -> Value
+VBind :: Bool -> Name -> (Binder Value) -> (Value -> Eval Value) -> Value
+VBLet :: Int -> Name -> Value -> Value -> Value -> Value
 VApp :: Value -> Value -> Value
 VType :: UExp -> Value
 VErased :: Value
 VConstant :: Const -> Value
 VTmp :: Int -> Value
+class Quote a
+quote :: Quote a => Int -> a -> Eval (TT Name)
+
+-- | Evaluate a state computation with the given initial state and return
+--   the final value, discarding the final state.
+--   
+--   <ul>
+--   <li><pre><a>evalState</a> m s = <a>fst</a> (<a>runState</a> m
+--   s)</pre></li>
+--   </ul>
+evalState :: State s a -> s -> a
+initEval :: EvalState
 instance Show EvalOpt
 instance Eq EvalOpt
 instance Show HNF
@@ -589,6 +696,7 @@ instance Eq Accessibility
 instance Show PReason
 instance Eq PReason
 instance Eq Totality
+instance Show Context
 instance Show Totality
 instance Binary (a -> b)
 instance Show Def
@@ -607,6 +715,158 @@ check :: Context -> Env -> Raw -> TC (Term, Type)
 check' :: Bool -> Context -> Env -> Raw -> StateT UCs TC (Term, Type)
 checkProgram :: Context -> RProgram -> TC Context
 
+module IRTS.Lang
+data LVar
+Loc :: Int -> LVar
+Glob :: Name -> LVar
+data LExp
+LV :: LVar -> LExp
+LApp :: Bool -> LExp -> [LExp] -> LExp
+LLazyApp :: Name -> [LExp] -> LExp
+LLazyExp :: LExp -> LExp
+LForce :: LExp -> LExp
+LLet :: Name -> LExp -> LExp -> LExp
+LLam :: [Name] -> LExp -> LExp
+LProj :: LExp -> Int -> LExp
+LCon :: Int -> Name -> [LExp] -> LExp
+LCase :: LExp -> [LAlt] -> LExp
+LConst :: Const -> LExp
+LForeign :: FLang -> FType -> String -> [(FType, LExp)] -> LExp
+LOp :: PrimFn -> [LExp] -> LExp
+LNothing :: LExp
+LError :: String -> LExp
+data IntTy
+ITNative :: IntTy
+IT8 :: IntTy
+IT16 :: IntTy
+IT32 :: IntTy
+IT64 :: IntTy
+ITBig :: IntTy
+intTyWidth :: IntTy -> Int
+intTyToConst :: IntTy -> Const
+data PrimFn
+LPlus :: IntTy -> PrimFn
+LMinus :: IntTy -> PrimFn
+LTimes :: IntTy -> PrimFn
+LUDiv :: IntTy -> PrimFn
+LSDiv :: IntTy -> PrimFn
+LURem :: IntTy -> PrimFn
+LSRem :: IntTy -> PrimFn
+LAnd :: IntTy -> PrimFn
+LOr :: IntTy -> PrimFn
+LXOr :: IntTy -> PrimFn
+LCompl :: IntTy -> PrimFn
+LSHL :: IntTy -> PrimFn
+LLSHR :: IntTy -> PrimFn
+LASHR :: IntTy -> PrimFn
+LEq :: IntTy -> PrimFn
+LLt :: IntTy -> PrimFn
+LLe :: IntTy -> PrimFn
+LGt :: IntTy -> PrimFn
+LGe :: IntTy -> PrimFn
+LSExt :: IntTy -> IntTy -> PrimFn
+LZExt :: IntTy -> IntTy -> PrimFn
+LTrunc :: IntTy -> IntTy -> PrimFn
+LFPlus :: PrimFn
+LFMinus :: PrimFn
+LFTimes :: PrimFn
+LFDiv :: PrimFn
+LFEq :: PrimFn
+LFLt :: PrimFn
+LFLe :: PrimFn
+LFGt :: PrimFn
+LFGe :: PrimFn
+LStrConcat :: PrimFn
+LStrLt :: PrimFn
+LStrEq :: PrimFn
+LStrLen :: PrimFn
+LIntFloat :: IntTy -> PrimFn
+LFloatInt :: IntTy -> PrimFn
+LIntStr :: IntTy -> PrimFn
+LStrInt :: IntTy -> PrimFn
+LFloatStr :: PrimFn
+LStrFloat :: PrimFn
+LChInt :: IntTy -> PrimFn
+LIntCh :: IntTy -> PrimFn
+LPrintNum :: PrimFn
+LPrintStr :: PrimFn
+LReadStr :: PrimFn
+LFExp :: PrimFn
+LFLog :: PrimFn
+LFSin :: PrimFn
+LFCos :: PrimFn
+LFTan :: PrimFn
+LFASin :: PrimFn
+LFACos :: PrimFn
+LFATan :: PrimFn
+LFSqrt :: PrimFn
+LFFloor :: PrimFn
+LFCeil :: PrimFn
+LStrHead :: PrimFn
+LStrTail :: PrimFn
+LStrCons :: PrimFn
+LStrIndex :: PrimFn
+LStrRev :: PrimFn
+LStdIn :: PrimFn
+LStdOut :: PrimFn
+LStdErr :: PrimFn
+LFork :: PrimFn
+LPar :: PrimFn
+LVMPtr :: PrimFn
+LNoOp :: PrimFn
+data FLang
+LANG_C :: FLang
+data FType
+FInt :: IntTy -> FType
+FFunction :: FType
+FFunctionIO :: FType
+FChar :: FType
+FString :: FType
+FUnit :: FType
+FPtr :: FType
+FDouble :: FType
+FAny :: FType
+data LAlt
+LConCase :: Int -> Name -> [Name] -> LExp -> LAlt
+LConstCase :: Const -> LExp -> LAlt
+LDefaultCase :: LExp -> LAlt
+data LDecl
+LFun :: [LOpt] -> Name -> [Name] -> LExp -> LDecl
+LConstructor :: Name -> Int -> Int -> LDecl
+type LDefs = Ctxt LDecl
+data LOpt
+Inline :: LOpt
+NoInline :: LOpt
+addTags :: Int -> [(Name, LDecl)] -> (Int, [(Name, LDecl)])
+data LiftState
+LS :: Name -> Int -> [(Name, LDecl)] -> LiftState
+lname :: Name -> Int -> Name
+liftAll :: [(Name, LDecl)] -> [(Name, LDecl)]
+lambdaLift :: Name -> LDecl -> [(Name, LDecl)]
+getNextName :: State LiftState Name
+addFn :: Name -> LDecl -> State LiftState ()
+lift :: [Name] -> LExp -> State LiftState LExp
+usedArg :: Eq t => [t] -> t -> [t]
+usedIn :: [Name] -> LExp -> [Name]
+instance Show LVar
+instance Eq LVar
+instance Show IntTy
+instance Eq IntTy
+instance Show PrimFn
+instance Eq PrimFn
+instance Show FLang
+instance Eq FLang
+instance Show FType
+instance Eq FType
+instance Show LAlt
+instance Eq LAlt
+instance Eq LExp
+instance Show LOpt
+instance Eq LOpt
+instance Show LDecl
+instance Eq LDecl
+instance Show LExp
+
 module Core.Unify
 unify :: Context -> Env -> TT Name -> TT Name -> [Name] -> [Name] -> TC ([(Name, TT Name)], Fails)
 type Fails = [(TT Name, TT Name, Env, Err)]
@@ -614,7 +874,7 @@ instance Show UInfo
 
 module Core.ProofState
 data ProofState
-PS :: Name -> [Name] -> [Name] -> Int -> Term -> Type -> [Name] -> (Name, [(Name, Term)]) -> Maybe (Name, Term) -> Fails -> [Name] -> [Name] -> [Name] -> Maybe ProofState -> Context -> String -> Bool -> ProofState
+PS :: Name -> [Name] -> [Name] -> Int -> Term -> Type -> [Name] -> (Name, [(Name, Term)]) -> [(Name, Term)] -> Maybe (Name, Term) -> Fails -> [Name] -> [Name] -> [Name] -> Maybe ProofState -> Context -> String -> Bool -> ProofState
 thname :: ProofState -> Name
 holes :: ProofState -> [Name]
 usedns :: ProofState -> [Name]
@@ -623,6 +883,7 @@ pterm :: ProofState -> Term
 ptype :: ProofState -> Type
 dontunify :: ProofState -> [Name]
 unified :: ProofState -> (Name, [(Name, Term)])
+notunified :: ProofState -> [(Name, Term)]
 solved :: ProofState -> Maybe (Name, Term)
 problems :: ProofState -> Fails
 injective :: ProofState -> [Name]
@@ -673,6 +934,7 @@ premises :: Goal -> Env
 goalType :: Goal -> Binder Term
 processTactic :: Tactic -> ProofState -> TC (ProofState, String)
 dropGiven :: Eq a => [a] -> [(a, TT a)] -> [a] -> [(a, TT a)]
+keepGiven :: Eq a => [a] -> [(a, TT a)] -> [a] -> [(a, TT a)]
 instance Show Tactic
 instance Pretty ProofState
 instance Show ProofState
@@ -754,262 +1016,18 @@ prepare_apply :: Raw -> [Bool] -> Elab' aux [Name]
 apply :: Raw -> [(Bool, Int)] -> Elab' aux [Name]
 apply2 :: Raw -> [Maybe (Elab' aux ())] -> Elab' aux ()
 apply_elab :: Name -> [Maybe (Int, Elab' aux ())] -> Elab' aux ()
+checkPiGoal :: Elab' aux ()
 simple_app :: Elab' aux () -> Elab' aux () -> Elab' aux ()
 arg :: Name -> Name -> Elab' aux ()
+no_errors :: Elab' aux () -> Elab' aux ()
 try :: Elab' aux a -> Elab' aux a -> Elab' aux a
 try' :: Elab' aux a -> Elab' aux a -> Bool -> Elab' aux a
 tryWhen :: Bool -> Elab' aux a -> Elab' aux a -> Elab' aux a
 tryAll :: [(Elab' aux a, String)] -> Elab' aux a
-prunStateT :: [a] -> StateT (ElabState t) TC t1 -> ElabState t -> TC (t1, ElabState t)
+prunStateT :: Int -> Bool -> [a] -> StateT (ElabState t) TC t1 -> ElabState t -> TC ((t1, Int), ElabState t)
+qshow :: Fails -> String
 dumpprobs :: Show a => [(t, t1, t2, a)] -> [Char]
 instance Show aux => Show (ElabState aux)
-
-module IRTS.Lang
-data LVar
-Loc :: Int -> LVar
-Glob :: Name -> LVar
-data LExp
-LV :: LVar -> LExp
-LApp :: Bool -> LExp -> [LExp] -> LExp
-LLazyApp :: Name -> [LExp] -> LExp
-LLazyExp :: LExp -> LExp
-LForce :: LExp -> LExp
-LLet :: Name -> LExp -> LExp -> LExp
-LLam :: [Name] -> LExp -> LExp
-LProj :: LExp -> Int -> LExp
-LCon :: Int -> Name -> [LExp] -> LExp
-LCase :: LExp -> [LAlt] -> LExp
-LConst :: Const -> LExp
-LForeign :: FLang -> FType -> String -> [(FType, LExp)] -> LExp
-LOp :: PrimFn -> [LExp] -> LExp
-LNothing :: LExp
-LError :: String -> LExp
-data PrimFn
-LPlus :: PrimFn
-LMinus :: PrimFn
-LTimes :: PrimFn
-LDiv :: PrimFn
-LMod :: PrimFn
-LAnd :: PrimFn
-LOr :: PrimFn
-LXOr :: PrimFn
-LCompl :: PrimFn
-LSHL :: PrimFn
-LSHR :: PrimFn
-LEq :: PrimFn
-LLt :: PrimFn
-LLe :: PrimFn
-LGt :: PrimFn
-LGe :: PrimFn
-LFPlus :: PrimFn
-LFMinus :: PrimFn
-LFTimes :: PrimFn
-LFDiv :: PrimFn
-LFEq :: PrimFn
-LFLt :: PrimFn
-LFLe :: PrimFn
-LFGt :: PrimFn
-LFGe :: PrimFn
-LBPlus :: PrimFn
-LBMinus :: PrimFn
-LBDec :: PrimFn
-LBTimes :: PrimFn
-LBDiv :: PrimFn
-LBMod :: PrimFn
-LBEq :: PrimFn
-LBLt :: PrimFn
-LBLe :: PrimFn
-LBGt :: PrimFn
-LBGe :: PrimFn
-LStrConcat :: PrimFn
-LStrLt :: PrimFn
-LStrEq :: PrimFn
-LStrLen :: PrimFn
-LIntFloat :: PrimFn
-LFloatInt :: PrimFn
-LIntStr :: PrimFn
-LStrInt :: PrimFn
-LFloatStr :: PrimFn
-LStrFloat :: PrimFn
-LIntBig :: PrimFn
-LBigInt :: PrimFn
-LStrBig :: PrimFn
-LBigStr :: PrimFn
-LChInt :: PrimFn
-LIntCh :: PrimFn
-LPrintNum :: PrimFn
-LPrintStr :: PrimFn
-LReadStr :: PrimFn
-LB8Lt :: PrimFn
-LB8Lte :: PrimFn
-LB8Eq :: PrimFn
-LB8Gt :: PrimFn
-LB8Gte :: PrimFn
-LB8Plus :: PrimFn
-LB8Minus :: PrimFn
-LB8Times :: PrimFn
-LB8UDiv :: PrimFn
-LB8SDiv :: PrimFn
-LB8URem :: PrimFn
-LB8SRem :: PrimFn
-LB8Shl :: PrimFn
-LB8LShr :: PrimFn
-LB8AShr :: PrimFn
-LB8And :: PrimFn
-LB8Or :: PrimFn
-LB8Xor :: PrimFn
-LB8Compl :: PrimFn
-LB8Z16 :: PrimFn
-LB8Z32 :: PrimFn
-LB8Z64 :: PrimFn
-LB8S16 :: PrimFn
-LB8S32 :: PrimFn
-LB8S64 :: PrimFn
-LB16Lt :: PrimFn
-LB16Lte :: PrimFn
-LB16Eq :: PrimFn
-LB16Gt :: PrimFn
-LB16Gte :: PrimFn
-LB16Plus :: PrimFn
-LB16Minus :: PrimFn
-LB16Times :: PrimFn
-LB16UDiv :: PrimFn
-LB16SDiv :: PrimFn
-LB16URem :: PrimFn
-LB16SRem :: PrimFn
-LB16Shl :: PrimFn
-LB16LShr :: PrimFn
-LB16AShr :: PrimFn
-LB16And :: PrimFn
-LB16Or :: PrimFn
-LB16Xor :: PrimFn
-LB16Compl :: PrimFn
-LB16Z32 :: PrimFn
-LB16Z64 :: PrimFn
-LB16S32 :: PrimFn
-LB16S64 :: PrimFn
-LB16T8 :: PrimFn
-LB32Lt :: PrimFn
-LB32Lte :: PrimFn
-LB32Eq :: PrimFn
-LB32Gt :: PrimFn
-LB32Gte :: PrimFn
-LB32Plus :: PrimFn
-LB32Minus :: PrimFn
-LB32Times :: PrimFn
-LB32UDiv :: PrimFn
-LB32SDiv :: PrimFn
-LB32URem :: PrimFn
-LB32SRem :: PrimFn
-LB32Shl :: PrimFn
-LB32LShr :: PrimFn
-LB32AShr :: PrimFn
-LB32And :: PrimFn
-LB32Or :: PrimFn
-LB32Xor :: PrimFn
-LB32Compl :: PrimFn
-LB32Z64 :: PrimFn
-LB32S64 :: PrimFn
-LB32T8 :: PrimFn
-LB32T16 :: PrimFn
-LB64Lt :: PrimFn
-LB64Lte :: PrimFn
-LB64Eq :: PrimFn
-LB64Gt :: PrimFn
-LB64Gte :: PrimFn
-LB64Plus :: PrimFn
-LB64Minus :: PrimFn
-LB64Times :: PrimFn
-LB64UDiv :: PrimFn
-LB64SDiv :: PrimFn
-LB64URem :: PrimFn
-LB64SRem :: PrimFn
-LB64Shl :: PrimFn
-LB64LShr :: PrimFn
-LB64AShr :: PrimFn
-LB64And :: PrimFn
-LB64Or :: PrimFn
-LB64Xor :: PrimFn
-LB64Compl :: PrimFn
-LB64T8 :: PrimFn
-LB64T16 :: PrimFn
-LB64T32 :: PrimFn
-LIntB8 :: PrimFn
-LIntB16 :: PrimFn
-LIntB32 :: PrimFn
-LIntB64 :: PrimFn
-LB32Int :: PrimFn
-LFExp :: PrimFn
-LFLog :: PrimFn
-LFSin :: PrimFn
-LFCos :: PrimFn
-LFTan :: PrimFn
-LFASin :: PrimFn
-LFACos :: PrimFn
-LFATan :: PrimFn
-LFSqrt :: PrimFn
-LFFloor :: PrimFn
-LFCeil :: PrimFn
-LStrHead :: PrimFn
-LStrTail :: PrimFn
-LStrCons :: PrimFn
-LStrIndex :: PrimFn
-LStrRev :: PrimFn
-LStdIn :: PrimFn
-LStdOut :: PrimFn
-LStdErr :: PrimFn
-LFork :: PrimFn
-LPar :: PrimFn
-LVMPtr :: PrimFn
-LNoOp :: PrimFn
-data FLang
-LANG_C :: FLang
-data FType
-FInt :: FType
-FChar :: FType
-FString :: FType
-FUnit :: FType
-FPtr :: FType
-FDouble :: FType
-FAny :: FType
-data LAlt
-LConCase :: Int -> Name -> [Name] -> LExp -> LAlt
-LConstCase :: Const -> LExp -> LAlt
-LDefaultCase :: LExp -> LAlt
-data LDecl
-LFun :: [LOpt] -> Name -> [Name] -> LExp -> LDecl
-LConstructor :: Name -> Int -> Int -> LDecl
-type LDefs = Ctxt LDecl
-data LOpt
-Inline :: LOpt
-NoInline :: LOpt
-addTags :: Int -> [(Name, LDecl)] -> (Int, [(Name, LDecl)])
-data LiftState
-LS :: Name -> Int -> [(Name, LDecl)] -> LiftState
-lname :: Name -> Int -> Name
-liftAll :: [(Name, LDecl)] -> [(Name, LDecl)]
-lambdaLift :: Name -> LDecl -> [(Name, LDecl)]
-getNextName :: State LiftState Name
-addFn :: Name -> LDecl -> State LiftState ()
-lift :: [Name] -> LExp -> State LiftState LExp
-usedArg :: Eq t => [t] -> t -> [t]
-usedIn :: [Name] -> LExp -> [Name]
-instance Show LVar
-instance Eq LVar
-instance Show PrimFn
-instance Eq PrimFn
-instance Show FLang
-instance Eq FLang
-instance Show FType
-instance Eq FType
-instance Show LAlt
-instance Eq LAlt
-instance Eq LExp
-instance Show LOpt
-instance Eq LOpt
-instance Show LDecl
-instance Eq LDecl
-instance Show LExp
 
 module Idris.Unlit
 unlit :: FilePath -> String -> TC String
@@ -1113,7 +1131,7 @@ instance Show OutputType
 
 module Idris.AbsSyntaxTree
 data IOption
-IOption :: Int -> Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Target -> OutputType -> FilePath -> [FilePath] -> [Opt] -> IOption
+IOption :: Int -> Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Target -> OutputType -> FilePath -> [FilePath] -> [Opt] -> IOption
 opt_logLevel :: IOption -> Int
 opt_typecase :: IOption -> Bool
 opt_typeintype :: IOption -> Bool
@@ -1122,16 +1140,24 @@ opt_showimp :: IOption -> Bool
 opt_errContext :: IOption -> Bool
 opt_repl :: IOption -> Bool
 opt_verbose :: IOption -> Bool
+opt_quiet :: IOption -> Bool
 opt_target :: IOption -> Target
 opt_outputTy :: IOption -> OutputType
 opt_ibcsubdir :: IOption -> FilePath
 opt_importdirs :: IOption -> [FilePath]
 opt_cmdline :: IOption -> [Opt]
 defaultOpts :: IOption
+data LanguageExt
+TypeProviders :: LanguageExt
+
+-- | The output mode in use
+data OutputMode
+RawOutput :: OutputMode
+IdeSlave :: Integer -> OutputMode
 
 -- | The global state used in the Idris monad
 data IState
-IState :: Context -> [(UConstraint, FC)] -> [FixDecl] -> Ctxt [PArg] -> Ctxt [Bool] -> Ctxt ClassInfo -> Ctxt DSL -> Ctxt OptInfo -> Ctxt TypeInfo -> Ctxt [([Name], Term, Term)] -> Ctxt [FnOpt] -> Ctxt CGInfo -> Ctxt [Name] -> Ctxt String -> [(FC, Name)] -> String -> IOption -> Int -> [Name] -> [Name] -> [Syntax] -> [String] -> [FilePath] -> [(Name, (Int, PrimFn))] -> [FilePath] -> [String] -> [String] -> [(Name, [String])] -> Maybe Int -> Maybe Name -> [Int] -> [Maybe Int] -> [(Name, Maybe Accessibility)] -> Accessibility -> Bool -> [IBCWrite] -> Maybe String -> IState
+IState :: Context -> [(UConstraint, FC)] -> [FixDecl] -> Ctxt [PArg] -> Ctxt [Bool] -> Ctxt ClassInfo -> Ctxt DSL -> Ctxt OptInfo -> Ctxt TypeInfo -> Ctxt ([([Name], Term, Term)], [PTerm]) -> Ctxt [FnOpt] -> Ctxt CGInfo -> Ctxt [Name] -> Ctxt String -> [(FC, Name)] -> String -> IOption -> Int -> [Name] -> [Name] -> [Syntax] -> [String] -> [FilePath] -> [(Name, (Int, PrimFn))] -> [(Target, FilePath)] -> [(Target, String)] -> [(Target, String)] -> [(Name, [String])] -> Maybe Int -> Maybe Name -> [Int] -> [Maybe Int] -> [(Name, Maybe Accessibility)] -> Accessibility -> Bool -> [IBCWrite] -> Maybe String -> [DynamicLib] -> [LanguageExt] -> OutputMode -> IState
 
 -- | All the currently defined names and their terms
 tt_ctxt :: IState -> Context
@@ -1148,7 +1174,9 @@ idris_classes :: IState -> Ctxt ClassInfo
 idris_dsls :: IState -> Ctxt DSL
 idris_optimisation :: IState -> Ctxt OptInfo
 idris_datatypes :: IState -> Ctxt TypeInfo
-idris_patdefs :: IState -> Ctxt [([Name], Term, Term)]
+
+-- | list of lhs/rhs, and a list of missing clauses
+idris_patdefs :: IState -> Ctxt ([([Name], Term, Term)], [PTerm])
 idris_flags :: IState -> Ctxt [FnOpt]
 idris_callgraph :: IState -> Ctxt CGInfo
 idris_calledgraph :: IState -> Ctxt [Name]
@@ -1167,9 +1195,9 @@ syntax_keywords :: IState -> [String]
 -- | The imported modules
 imported :: IState -> [FilePath]
 idris_scprims :: IState -> [(Name, (Int, PrimFn))]
-idris_objs :: IState -> [FilePath]
-idris_libs :: IState -> [String]
-idris_hdrs :: IState -> [String]
+idris_objs :: IState -> [(Target, FilePath)]
+idris_libs :: IState -> [(Target, String)]
+idris_hdrs :: IState -> [(Target, String)]
 proof_list :: IState -> [(Name, [String])]
 errLine :: IState -> Maybe Int
 lastParse :: IState -> Maybe Name
@@ -1180,6 +1208,9 @@ default_access :: IState -> Accessibility
 default_total :: IState -> Bool
 ibc_write :: IState -> [IBCWrite]
 compiled_so :: IState -> Maybe String
+idris_dynamic_libs :: IState -> [DynamicLib]
+idris_language_extensions :: IState -> [LanguageExt]
+idris_outputmode :: IState -> OutputMode
 data SizeChange
 Smaller :: SizeChange
 Same :: SizeChange
@@ -1206,9 +1237,10 @@ IBCOpt :: Name -> IBCWrite
 IBCSyntax :: Syntax -> IBCWrite
 IBCKeyword :: String -> IBCWrite
 IBCImport :: FilePath -> IBCWrite
-IBCObj :: FilePath -> IBCWrite
-IBCLib :: String -> IBCWrite
-IBCHeader :: String -> IBCWrite
+IBCObj :: Target -> FilePath -> IBCWrite
+IBCLib :: Target -> String -> IBCWrite
+IBCDyLib :: String -> IBCWrite
+IBCHeader :: Target -> String -> IBCWrite
 IBCAccess :: Name -> Accessibility -> IBCWrite
 IBCTotal :: Name -> Totality -> IBCWrite
 IBCFlags :: Name -> [FnOpt] -> IBCWrite
@@ -1219,7 +1251,8 @@ IBCDef :: Name -> IBCWrite
 idrisInit :: IState
 
 -- | The monad for the main REPL - reading and processing files and
---   updating global state (hence the IO inner monad).
+--   updating global state (hence the IO inner monad). type Idris = WriterT
+--   [Either String (IO ())] (State IState a))
 type Idris = StateT IState IO
 data Target
 ViaC :: Target
@@ -1238,6 +1271,7 @@ DocStr :: Name -> Command
 TotCheck :: Name -> Command
 Reload :: Command
 Load :: FilePath -> Command
+ChangeDirectory :: FilePath -> Command
 ModImport :: String -> Command
 Edit :: Command
 Compile :: Target -> String -> Command
@@ -1258,6 +1292,8 @@ HNF :: PTerm -> Command
 Defn :: Name -> Command
 Info :: Name -> Command
 Missing :: Name -> Command
+DynamicLink :: FilePath -> Command
+ListDynamic :: Command
 Pattelab :: PTerm -> Command
 DebugInfo :: Name -> Command
 Search :: PTerm -> Command
@@ -1268,6 +1304,8 @@ data Opt
 Filename :: String -> Opt
 Ver :: Opt
 Usage :: Opt
+Quiet :: Opt
+Ideslave :: Opt
 ShowLibs :: Opt
 ShowLibdir :: Opt
 ShowIncs :: Opt
@@ -1298,6 +1336,7 @@ DumpCases :: String -> Opt
 FOVM :: String -> Opt
 UseTarget :: Target -> Opt
 OutputTy :: OutputType -> Opt
+Extension :: LanguageExt -> Opt
 data Fixity
 Infixl :: Int -> Fixity
 prec :: Fixity -> Int
@@ -1399,7 +1438,23 @@ PMutual :: FC -> [PDecl' t] -> PDecl' t
 -- | Compiler directive. The parser inserts the corresponding action in the
 --   Idris monad.
 PDirective :: (Idris ()) -> PDecl' t
+
+-- | Type provider. The first t is the type, the second is the term
+PProvider :: SyntaxInfo -> FC -> Name -> t -> t -> PDecl' t
+
+-- | One clause of a top-level definition. Term arguments to constructors
+--   are:
+--   
+--   <ol>
+--   <li>The whole application (missing for PClauseR and PWithR because
+--   they're within a <a>with</a> clause)</li>
+--   <li>The list of patterns</li>
+--   <li>The right-hand side</li>
+--   <li>The where block (PDecl' t)</li>
+--   </ol>
 data PClause' t
+
+-- | A normal top-level definition.
 PClause :: FC -> Name -> t -> [t] -> t -> [PDecl' t] -> PClause' t
 PWith :: FC -> Name -> t -> [t] -> t -> [PDecl' t] -> PClause' t
 PClauseR :: FC -> [t] -> t -> [PDecl' t] -> PClause' t
@@ -1458,6 +1513,7 @@ PFalse :: FC -> PTerm
 PRefl :: FC -> PTerm -> PTerm
 PResolveTC :: FC -> PTerm
 PEq :: FC -> PTerm -> PTerm -> PTerm
+PRewrite :: FC -> PTerm -> PTerm -> PTerm
 PPair :: FC -> PTerm -> PTerm -> PTerm
 PDPair :: FC -> PTerm -> PTerm -> PTerm -> PTerm
 PAlternative :: Bool -> [PTerm] -> PTerm
@@ -1505,7 +1561,9 @@ ProofTerm :: PTactic' t
 Undo :: PTactic' t
 Try :: (PTactic' t) -> (PTactic' t) -> PTactic' t
 TSeq :: (PTactic' t) -> (PTactic' t) -> PTactic' t
-ReflectTac :: t -> PTactic' t
+ApplyTactic :: t -> PTactic' t
+Reflect :: t -> PTactic' t
+Fill :: t -> PTactic' t
 GoalType :: String -> (PTactic' t) -> PTactic' t
 Qed :: PTactic' t
 Abandon :: PTactic' t
@@ -1588,9 +1646,12 @@ Binding :: Name -> SSymbol
 Expr :: Name -> SSymbol
 SimpleExpr :: Name -> SSymbol
 initDSL :: DSL' PTerm
+data Using
+UImplicit :: Name -> PTerm -> Using
+UConstraint :: Name -> [Name] -> Using
 data SyntaxInfo
-Syn :: [(Name, PTerm)] -> [(Name, PTerm)] -> [String] -> [Name] -> (Name -> Name) -> Bool -> Bool -> DSL -> SyntaxInfo
-using :: SyntaxInfo -> [(Name, PTerm)]
+Syn :: [Using] -> [(Name, PTerm)] -> [String] -> [Name] -> (Name -> Name) -> Bool -> Bool -> DSL -> SyntaxInfo
+using :: SyntaxInfo -> [Using]
 syn_params :: SyntaxInfo -> [(Name, PTerm)]
 syn_namespace :: SyntaxInfo -> [String]
 no_imp :: SyntaxInfo -> [Name]
@@ -1613,6 +1674,11 @@ getPArity :: PTerm -> Int
 allNamesIn :: PTerm -> [Name]
 namesIn :: [(Name, PTerm)] -> IState -> PTerm -> [Name]
 usedNamesIn :: [Name] -> IState -> PTerm -> [Name]
+instance Show LanguageExt
+instance Eq LanguageExt
+instance Read LanguageExt
+instance Ord LanguageExt
+instance Show OutputMode
 instance Show SizeChange
 instance Eq SizeChange
 instance Show CGInfo
@@ -1648,6 +1714,8 @@ instance Show SynContext
 instance Show SSymbol
 instance Show Syntax
 instance Show IBCWrite
+instance Show Using
+instance Eq Using
 instance Show SyntaxInfo
 instance Functor PDecl'
 instance Functor PClause'
@@ -1667,11 +1735,14 @@ instance Show Fixity
 
 module Idris.AbsSyntax
 getContext :: Idris Context
-getObjectFiles :: Idris [FilePath]
-addObjectFile :: FilePath -> Idris ()
-getLibs :: Idris [String]
-addLib :: String -> Idris ()
-addHdr :: String -> Idris ()
+forTarget :: Target -> [(Target, a)] -> [a]
+getObjectFiles :: Target -> Idris [FilePath]
+addObjectFile :: Target -> FilePath -> Idris ()
+getLibs :: Target -> Idris [String]
+addLib :: Target -> String -> Idris ()
+addDyLib :: [String] -> Idris (Either DynamicLib String)
+addHdr :: Target -> String -> Idris ()
+addLangExt :: LanguageExt -> Idris ()
 totcheck :: (FC, Name) -> Idris ()
 setFlags :: Name -> [FnOpt] -> Idris ()
 setAccessibility :: Name -> Accessibility -> Idris ()
@@ -1686,7 +1757,7 @@ addInstance :: Bool -> Name -> Name -> Idris ()
 addClass :: Name -> ClassInfo -> Idris ()
 addIBC :: IBCWrite -> Idris ()
 clearIBC :: Idris ()
-getHdrs :: Idris [String]
+getHdrs :: Target -> Idris [String]
 setErrLine :: Int -> Idris ()
 clearErr :: Idris ()
 getSO :: Idris (Maybe String)
@@ -1700,7 +1771,11 @@ setContext :: Context -> Idris ()
 updateContext :: (Context -> Context) -> Idris ()
 addConstraints :: FC -> (Int, [UConstraint]) -> Idris ()
 addDeferred :: [(Name, Type)] -> Idris ()
+addDeferredTyCon :: [(Name, Type)] -> Idris ()
+addDeferred' :: NameType -> [(Name, Type)] -> Idris ()
 solveDeferred :: Name -> Idris ()
+iResult :: String -> Idris ()
+iFail :: String -> Idris ()
 iputStrLn :: String -> Idris ()
 iWarn :: FC -> String -> Idris ()
 setLogLevel :: Int -> Idris ()
@@ -1712,10 +1787,12 @@ setErrContext :: Bool -> Idris ()
 errContext :: Idris Bool
 useREPL :: Idris Bool
 setREPL :: Bool -> Idris ()
+setQuiet :: Bool -> Idris ()
 setTarget :: Target -> Idris ()
 target :: Idris Target
 setOutputTy :: OutputType -> Idris ()
 outputTy :: Idris OutputType
+setIdeSlave :: Bool -> Idris ()
 verbose :: Idris Bool
 setVerbose :: Bool -> Idris ()
 typeInType :: Idris Bool
@@ -1763,6 +1840,7 @@ expandParamsD :: Bool -> IState -> (Name -> Name) -> [(Name, PTerm)] -> [Name] -
 mapsnd :: (t -> t2) -> (t1, t) -> (t1, t2)
 getPriority :: IState -> PTerm -> Int
 addStatics :: Name -> Term -> PTerm -> Idris ()
+addUsingConstraints :: SyntaxInfo -> FC -> PTerm -> Idris PTerm
 implicit :: SyntaxInfo -> Name -> PTerm -> Idris PTerm
 implicit' :: SyntaxInfo -> [Name] -> Name -> PTerm -> Idris PTerm
 implicitise :: SyntaxInfo -> [Name] -> IState -> PTerm -> (PTerm, [PArg])
@@ -1772,6 +1850,7 @@ addImplBoundInf :: IState -> [Name] -> [Name] -> PTerm -> PTerm
 addImpl :: IState -> PTerm -> PTerm
 addImpl' :: Bool -> [Name] -> [Name] -> IState -> PTerm -> PTerm
 aiFn :: Bool -> Bool -> IState -> FC -> Name -> [PArg] -> Either Err PTerm
+stripLinear :: IState -> PTerm -> PTerm
 mkPApp :: FC -> Int -> PTerm -> [PArg] -> PTerm
 findStatics :: IState -> PTerm -> (PTerm, [Bool])
 dumpDecls :: [PDecl] -> String
@@ -1806,7 +1885,9 @@ instance Eq IFileType
 module Idris.Delaborate
 bugaddr :: [Char]
 delab :: IState -> Term -> PTerm
+delabTy :: IState -> Name -> PTerm
 delab' :: IState -> Term -> Bool -> PTerm
+delabTy' :: IState -> [PArg] -> Term -> Bool -> PTerm
 pshow :: IState -> Err -> String
 showSc :: IState -> [(Name, Term)] -> [Char]
 showbasic :: Name -> String
@@ -1818,7 +1899,7 @@ idrisCatch :: Idris a -> (SomeException -> Idris a) -> Idris a
 data IdrisErr
 IErr :: String -> IdrisErr
 ifail :: String -> Idris ()
-ierror :: Err -> Idris ()
+ierror :: Err -> Idris a
 tclift :: TC a -> Idris a
 tctry :: TC a -> TC a -> Idris a
 getErrLine :: (Num a, Read a) => [Char] -> a
@@ -1827,41 +1908,27 @@ instance Exception IdrisErr
 instance Show IdrisErr
 
 module Idris.Coverage
-genMissing :: Name -> [Name] -> SC -> Idris [PTerm]
 mkPatTm :: PTerm -> Idris Term
-mkPTerm :: Name -> [TT Name] -> Idris PTerm
-gm :: Name -> [TT Name] -> SC -> Idris ([PTerm], [PTerm])
-gmAlt :: Name -> [TT Name] -> Name -> CaseAlt' Term -> Idris ([PTerm], [PTerm])
-getDefault :: [CaseAlt' t] -> SC' t
-dropDefault :: [CaseAlt' t] -> [CaseAlt' t]
-expandTree :: SC -> Idris SC
-expandAlts :: IState -> [CaseAlt] -> SC -> Idris [CaseAlt]
 genClauses :: FC -> Name -> [Term] -> [PClause] -> Idris [PTerm]
 fnub :: Eq a => [a] -> [a]
 genAll :: IState -> [PTerm] -> [PTerm]
 upd :: t -> PArg' t -> PArg' t
 checkPositive :: Name -> (Name, Type) -> Idris ()
-data LexOrder
-LexXX :: LexOrder
-LexEQ :: LexOrder
-LexLT :: LexOrder
 calcProd :: IState -> FC -> Name -> [([Name], Term, Term)] -> Idris Totality
 calcTotality :: [Name] -> FC -> Name -> [([Name], Term, Term)] -> Idris Totality
 checkTotality :: [Name] -> FC -> Name -> Idris Totality
 checkDeclTotality :: (FC, Name) -> Idris Totality
 buildSCG :: (FC, Name) -> Idris ()
-buildSCG' :: IState -> SC -> [Name] -> [SCGEntry]
+buildSCG' :: IState -> [(Term, Term)] -> [Name] -> [SCGEntry]
 checkSizeChange :: Name -> Idris Totality
 type MultiPath = [SCGEntry]
 mkMultiPaths :: IState -> MultiPath -> [SCGEntry] -> [MultiPath]
 checkMP :: IState -> Int -> MultiPath -> Totality
+allNothing :: [Maybe t] -> Bool
 collapseNothing :: [(Maybe t1, t)] -> [(Maybe t1, t)]
 noPartial :: [Totality] -> Totality
 collapse :: [Totality] -> Totality
 collapse' :: Totality -> [Totality] -> Totality
-instance Show LexOrder
-instance Eq LexOrder
-instance Ord LexOrder
 
 module Idris.Compiler
 compileEpic :: FilePath -> Term -> Idris ()
@@ -1869,7 +1936,7 @@ compileEpic :: FilePath -> Term -> Idris ()
 module Idris.IBC
 ibcVersion :: Word8
 data IBCFile
-IBCFile :: Word8 -> FilePath -> [FilePath] -> [(Name, [PArg])] -> [FixDecl] -> [(Name, [Bool])] -> [(Name, ClassInfo)] -> [(Bool, Name, Name)] -> [(Name, DSL)] -> [(Name, TypeInfo)] -> [(Name, OptInfo)] -> [Syntax] -> [String] -> [FilePath] -> [String] -> [String] -> [(Name, Accessibility)] -> [(Name, Totality)] -> [(Name, [FnOpt])] -> [(Name, CGInfo)] -> [(Name, Def)] -> [(Name, String)] -> [Name] -> IBCFile
+IBCFile :: Word8 -> FilePath -> [FilePath] -> [(Name, [PArg])] -> [FixDecl] -> [(Name, [Bool])] -> [(Name, ClassInfo)] -> [(Bool, Name, Name)] -> [(Name, DSL)] -> [(Name, TypeInfo)] -> [(Name, OptInfo)] -> [Syntax] -> [String] -> [(Target, FilePath)] -> [(Target, String)] -> [String] -> [(Target, String)] -> [(Name, Accessibility)] -> [(Name, Totality)] -> [(Name, [FnOpt])] -> [(Name, CGInfo)] -> [(Name, Def)] -> [(Name, String)] -> [Name] -> IBCFile
 ver :: IBCFile -> Word8
 sourcefile :: IBCFile -> FilePath
 ibc_imports :: IBCFile -> [FilePath]
@@ -1883,9 +1950,10 @@ ibc_datatypes :: IBCFile -> [(Name, TypeInfo)]
 ibc_optimise :: IBCFile -> [(Name, OptInfo)]
 ibc_syntax :: IBCFile -> [Syntax]
 ibc_keywords :: IBCFile -> [String]
-ibc_objs :: IBCFile -> [FilePath]
-ibc_libs :: IBCFile -> [String]
-ibc_hdrs :: IBCFile -> [String]
+ibc_objs :: IBCFile -> [(Target, FilePath)]
+ibc_libs :: IBCFile -> [(Target, String)]
+ibc_dynamic_libs :: IBCFile -> [String]
+ibc_hdrs :: IBCFile -> [(Target, String)]
 ibc_access :: IBCFile -> [(Name, Accessibility)]
 ibc_total :: IBCFile -> [(Name, Totality)]
 ibc_flags :: IBCFile -> [(Name, [FnOpt])]
@@ -1911,9 +1979,10 @@ pDatatypes :: [(Name, TypeInfo)] -> Idris ()
 pOptimise :: [(Name, OptInfo)] -> Idris ()
 pSyntax :: [Syntax] -> Idris ()
 pKeywords :: [String] -> Idris ()
-pObjs :: [FilePath] -> Idris ()
-pLibs :: [String] -> Idris ()
-pHdrs :: [String] -> Idris ()
+pObjs :: [(Target, FilePath)] -> Idris ()
+pLibs :: [(Target, String)] -> Idris ()
+pDyLibs :: [String] -> Idris ()
+pHdrs :: [(Target, String)] -> Idris ()
 pDefs :: [(Name, Def)] -> Idris ()
 pDocs :: [(Name, String)] -> Idris ()
 pAccess :: [(Name, Accessibility)] -> Idris ()
@@ -1921,6 +1990,8 @@ pFlags :: [(Name, [FnOpt])] -> Idris ()
 pTotal :: [(Name, Totality)] -> Idris ()
 pCG :: [(Name, CGInfo)] -> Idris ()
 pCoercions :: [Name] -> Idris ()
+instance Show IBCFile
+instance Binary Target
 instance Binary SSymbol
 instance Binary t => Binary (DSL' t)
 instance Binary Syntax
@@ -1935,6 +2006,7 @@ instance Binary PTerm
 instance Binary t => Binary (PData' t)
 instance Binary t => Binary (PClause' t)
 instance Binary SyntaxInfo
+instance Binary Using
 instance Binary t => Binary (PDecl' t)
 instance Binary Plicity
 instance Binary Static
@@ -1948,7 +2020,7 @@ instance Binary Accessibility
 instance Binary Def
 instance Binary CaseAlt
 instance Binary SC
-instance Binary n => Binary (TT n)
+instance Binary (TT Name)
 instance Binary NameType
 instance Binary b => Binary (Binder b)
 instance Binary Raw
@@ -1997,6 +2069,21 @@ instance Transform SC
 instance Transform a => Transform (Binder a)
 instance Transform (TT Name)
 
+module Core.Execute
+execute :: Term -> Idris Term
+instance Show Lazy
+instance Show Foreign
+instance Show ExecVal
+
+module Idris.Providers
+
+-- | Wrap a type provider in the type of type providers
+providerTy :: FC -> PTerm -> PTerm
+
+-- | Handle an error, if the type provider returned an error. Otherwise
+--   return the provided term.
+getProvided :: TT Name -> Idris (TT Name)
+
 module Idris.Docs
 data FunDoc
 Doc :: Name -> String -> [(Name, PArg)] -> PTerm -> (Maybe Fixity) -> FunDoc
@@ -2011,16 +2098,6 @@ docClass :: Name -> ClassInfo -> Idris Doc
 docFun :: Name -> Idris FunDoc
 instance Show Doc
 instance Show FunDoc
-
-
--- | Support for command-line completion at the REPL and in the prover
-module Idris.Completion
-
--- | Complete REPL commands and defined identifiers
-replCompletion :: CompletionFunc Idris
-
--- | Complete tactics and their arguments
-proverCompletion :: [String] -> CompletionFunc Idris
 
 module IRTS.Bytecode
 data Reg
@@ -2099,7 +2176,8 @@ toBC :: (Name, SDecl) -> (Name, [BC])
 bc :: Reg -> SExp -> [BC]
 
 module IRTS.CodegenJava
-codegenJava :: [(Name, SDecl)] -> String -> OutputType -> IO ()
+codegenJava :: [(Name, SExp)] -> [(Name, SDecl)] -> FilePath -> [String] -> [String] -> OutputType -> IO ()
+instance Show Std
 
 module IRTS.Compiler
 compile :: Target -> FilePath -> Term -> Idris ()
@@ -2114,9 +2192,10 @@ build :: (Name, Def) -> Idris (Name, LDecl)
 getPrim :: IState -> Name -> [LExp] -> Maybe LExp
 declArgs :: [Name] -> Bool -> Name -> LExp -> LDecl
 mkLDecl :: Name -> Def -> StateT IState IO LDecl
-getFTypes :: TT Name -> [FType]
+getFTypes :: TT Name -> Maybe [FType]
 mkIty' :: TT Name -> FType
 mkIty :: [Char] -> FType
+mkIntIty :: [Char] -> FType
 zname :: Name
 sname :: Name
 instance ToIR SC
@@ -2132,6 +2211,9 @@ iName :: [String] -> CParser a Name
 idrisLexer :: TokenParser a
 maybeWithNS :: CParser a String -> Bool -> [String] -> CParser a Name
 pDocComment :: Char -> CParser a String
+
+-- | The characters allowed in operator names
+opChars :: [Char]
 
 module Core.ShellParser
 parseCommand :: String -> Either ParseError Command
@@ -2173,6 +2255,45 @@ findInstances :: IState -> Term -> [Name]
 resolveTC :: Int -> Name -> IState -> ElabD ()
 collectDeferred :: Term -> State [(Name, Type)] Term
 runTac :: Bool -> IState -> PTactic -> ElabD ()
+
+-- | Prefix a name with the <a>Reflection.Language</a> namespace
+reflm :: String -> Name
+
+-- | Reify tactics from their reflected representation
+reify :: IState -> Term -> ElabD PTactic
+reifyApp :: IState -> Name -> [Term] -> ElabD PTactic
+
+-- | Reify terms from their reflected representation
+reifyTT :: Term -> ElabD Term
+reifyTTApp :: Name -> [Term] -> ElabD Term
+
+-- | Reify raw terms from their reflected representation
+reifyRaw :: Term -> ElabD Raw
+reifyRawApp :: Name -> [Term] -> ElabD Raw
+reifyTTName :: Term -> ElabD Name
+reifyTTNameApp :: Name -> [Term] -> ElabD Name
+reifyTTNamespace :: Term -> ElabD [String]
+reifyTTNameType :: Term -> ElabD NameType
+reifyTTBinder :: (Term -> ElabD a) -> Name -> Term -> ElabD (Binder a)
+reifyTTBinderApp :: (Term -> ElabD a) -> Name -> [Term] -> ElabD (Binder a)
+reifyTTConst :: Term -> ElabD Const
+reifyTTConstApp :: Name -> Term -> ElabD Const
+reifyTTUExp :: Term -> ElabD UExp
+
+-- | Create a reflected call to a named function/constructor
+reflCall :: String -> [Raw] -> Raw
+
+-- | Lift a term into its Language.Reflection.TT representation
+reflect :: Term -> Raw
+reflectNameType :: NameType -> Raw
+reflectName :: Name -> Raw
+reflectBinder :: Binder Term -> Raw
+reflectConstant :: Const -> Raw
+reflectUExp :: UExp -> Raw
+
+-- | Reflect the environment of a proof into a List (TTName, Binder TT)
+reflectEnv :: Env -> Raw
+envTupleType :: Raw
 solveAll :: Elab' aux ()
 mkSpecialised :: IState -> FC -> Name -> [PTerm] -> PTerm -> ElabD PTerm
 mkSpecDecl :: IState -> Name -> [(PTerm, Bool)] -> PTerm -> ElabD PTerm
@@ -2180,11 +2301,20 @@ mkSpecDecl :: IState -> Name -> [(PTerm, Bool)] -> PTerm -> ElabD PTerm
 module Idris.ElabDecls
 recheckC :: FC -> Env -> TT Name -> StateT IState IO (Term, Type)
 checkDef :: FC -> [(t, TT Name)] -> StateT IState IO [(t, Term)]
+
+-- | Elaborate a top-level type declaration - for example, <a>foo : Int
+--   -&gt; Int</a>.
 elabType :: ElabInfo -> SyntaxInfo -> String -> FC -> FnOpts -> Name -> PTerm -> Idris ()
 elabPostulate :: ElabInfo -> SyntaxInfo -> String -> FC -> FnOpts -> Name -> PTerm -> Idris ()
 elabData :: ElabInfo -> SyntaxInfo -> String -> FC -> Bool -> PData -> Idris ()
+
+-- | Elaborate a type provider
+elabProvider :: ElabInfo -> SyntaxInfo -> FC -> Name -> PTerm -> PTerm -> Idris ()
 elabRecord :: ElabInfo -> SyntaxInfo -> String -> FC -> Name -> PTerm -> String -> Name -> PTerm -> Idris ()
 elabCon :: ElabInfo -> SyntaxInfo -> Name -> Bool -> (String, Name, PTerm, FC) -> Idris (Name, Type)
+
+-- | Elaborate a collection of left-hand and right-hand pairs - that is, a
+--   top-level definition.
 elabClauses :: ElabInfo -> FC -> FnOpts -> Name -> [PClause] -> Idris ()
 elabVal :: ElabInfo -> Bool -> PTerm -> Idris (Term, Type)
 checkPossible :: ElabInfo -> FC -> Bool -> Name -> PTerm -> Idris Bool
@@ -2329,9 +2459,12 @@ impOK :: SyntaxInfo -> SyntaxInfo
 pTSig :: SyntaxInfo -> ParsecT String IState Identity PTerm
 pTExpr :: SyntaxInfo -> ParsecT [Char] IState Identity PTerm
 pLambda :: SyntaxInfo -> ParsecT String IState Identity PTerm
+pRewriteTerm :: SyntaxInfo -> ParsecT String IState Identity PTerm
 pLet :: SyntaxInfo -> ParsecT String IState Identity PTerm
 pPi :: SyntaxInfo -> ParsecT String IState Identity PTerm
 pConstList :: SyntaxInfo -> IParser [PTerm]
+usingDeclList :: SyntaxInfo -> ParsecT [Char] IState Identity [Using]
+usingDecl :: SyntaxInfo -> ParsecT [Char] IState Identity Using
 tyDeclList :: SyntaxInfo -> ParsecT [Char] IState Identity [(Name, PTerm)]
 tyOptDeclList :: SyntaxInfo -> ParsecT [Char] IState Identity [(Name, PTerm)]
 bindList :: (t -> t1 -> t2 -> t2) -> [(t, t1)] -> t2 -> t2
@@ -2363,7 +2496,9 @@ pRHS :: SyntaxInfo -> Name -> IParser PTerm
 pClause :: SyntaxInfo -> IParser PClause
 pWExpr :: SyntaxInfo -> IParser PTerm
 pWhereblock :: Name -> SyntaxInfo -> IParser ([PDecl], [(Name, Name)])
-pDirective :: IParser [PDecl]
+pTarget :: IParser Target
+pDirective :: SyntaxInfo -> IParser [PDecl]
+pProvider :: SyntaxInfo -> IParser [PDecl]
 pTactic :: SyntaxInfo -> IParser PTactic
 
 module Idris.REPLParser
@@ -2371,6 +2506,16 @@ parseCmd :: IState -> [Char] -> Either ParseError Command
 
 module Idris.Primitives
 elabPrims :: Idris ()
+
+
+-- | Support for command-line completion at the REPL and in the prover
+module Idris.Completion
+
+-- | Complete REPL commands and defined identifiers
+replCompletion :: CompletionFunc Idris
+
+-- | Complete tactics and their arguments
+proverCompletion :: [String] -> CompletionFunc Idris
 
 module Idris.Prover
 prover :: Bool -> Name -> Idris ()
@@ -2423,6 +2568,11 @@ module Idris.REPL
 -- | Run the REPL
 repl :: IState -> [FilePath] -> InputT Idris ()
 
+-- | Run the IdeSlave
+ideslaveStart :: IState -> [FilePath] -> Idris ()
+ideslave :: IState -> [FilePath] -> Idris ()
+ideslaveProcess :: FilePath -> Command -> Idris ()
+
 -- | The prompt consists of the currently loaded modules, or <a>Idris</a>
 --   if there are none
 mkPrompt :: [FilePath] -> [Char]
@@ -2444,7 +2594,7 @@ showTotalN :: IState -> Name -> String
 displayHelp :: [Char]
 parseTarget :: String -> Target
 parseArgs :: [String] -> [Opt]
-help :: [([[Char]], [Char], [Char])]
+helphead :: [([[Char]], CmdArg, [Char])]
 replSettings :: Settings Idris
 idris :: [Opt] -> IO IState
 idrisMain :: [Opt] -> Idris ()
@@ -2460,6 +2610,7 @@ getPkg :: Opt -> Maybe (Bool, String)
 getPkgClean :: Opt -> Maybe String
 getTarget :: Opt -> Maybe Target
 getOutputTy :: Opt -> Maybe OutputType
+getLanguageExt :: Opt -> Maybe LanguageExt
 opt :: (Opt -> Maybe a) -> [Opt] -> [a]
 ver :: String
 banner :: [Char]
