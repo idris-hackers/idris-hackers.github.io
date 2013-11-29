@@ -2390,20 +2390,41 @@ eol :: MonadicParsing m => m ()
 -- | Checks if a character is a documentation comment marker
 isDocCommentMarker :: Char -> Bool
 
--- | Consumes a single-line comment SingleLineComment_t ::= '--' EOL_t |
---   '--' ~DocCommentMarker_t ~EOL_t* EOL_t ;
+-- | Consumes a single-line comment
+--   
+--   <pre>
+--   SingleLineComment_t ::= '--' EOL_t
+--                      |     '--' ~DocCommentMarker_t ~EOL_t* EOL_t
+--                      ;
+--   </pre>
 singleLineComment :: MonadicParsing m => m ()
 
--- | Consumes a multi-line comment MultiLineComment_t ::= '{ -- }' | '{ -'
---   ~DocCommentMarker_t InCommentChars_t ;
+-- | Consumes a multi-line comment
 --   
---   InCommentChars_t ::= '- }' | MultiLineComment_t InCommentChars_t | ~'-
---   }'+ InCommentChars_t ;
+--   <pre>
+--   MultiLineComment_t ::=
+--      '{ -- }'
+--    | '{ -' ~DocCommentMarker_t InCommentChars_t
+--   ;
+--   </pre>
+--   
+--   <pre>
+--   InCommentChars_t ::=
+--    '- }'
+--    | MultiLineComment_t InCommentChars_t
+--    | ~'- }'+ InCommentChars_t
+--   ;
+--   </pre>
 multiLineComment :: MonadicParsing m => m ()
 
 -- | Parses a documentation comment (similar to haddoc) given a marker
---   character DocComment_t ::= '--' DocCommentMarker_t ~EOL_t* EOL_t | '{
---   -' DocCommentMarket_t ~'- }'* '- }' ;
+--   character
+--   
+--   <pre>
+--   DocComment_t ::=   '--' DocCommentMarker_t ~EOL_t* EOL_t
+--                   | '{ -' DocCommentMarket_t ~'- }'* '- }'
+--                  ;
+--   </pre>
 docComment :: MonadicParsing m => Char -> m String
 
 -- | Parses some white space
@@ -2440,6 +2461,8 @@ reserved :: MonadicParsing m => String -> m ()
 
 -- | Parses a reserved operator
 reservedOp :: MonadicParsing m => String -> m ()
+
+-- | Parses an identifier as a token
 identifier :: MonadicParsing m => m String
 
 -- | Parses an identifier with possible namespace as a name
@@ -2492,6 +2515,8 @@ indent :: IdrisParser Int
 
 -- | Gets last indentation
 lastIndent :: IdrisParser Int
+
+-- | Applies parser in an indented position
 indented :: IdrisParser a -> IdrisParser a
 
 -- | Applies parser to get a block (which has possibly indented statements)
@@ -2500,6 +2525,9 @@ indentedBlock :: IdrisParser a -> IdrisParser [a]
 -- | Applies parser to get a block with at least one statement (which has
 --   possibly indented statements)
 indentedBlock1 :: IdrisParser a -> IdrisParser [a]
+
+-- | Applies parser to get a block with exactly one (possibly indented)
+--   statement
 indentedBlockS :: IdrisParser a -> IdrisParser a
 
 -- | Checks if the following character matches provided parser
@@ -2552,6 +2580,8 @@ notOpenBraces :: IdrisParser ()
 
 -- | Parses an accessibilty modifier (e.g. public, private)
 accessibility :: IdrisParser Accessibility
+
+-- | Adds accessibility option for function
 addAcc :: Name -> Maybe Accessibility -> IdrisParser ()
 
 -- | Add accessbility option for data declarations (works for classes too -
@@ -2784,13 +2814,25 @@ operatorFront :: IdrisParser Name
 --   </pre>
 fnName :: IdrisParser Name
 
--- | Parses a fixity declaration <tt> Fixity ::= FixityType Natural_t
---   OperatorList Terminator ; </tt>
+-- | Parses a fixity declaration
+--   
+--   <pre>
+--   Fixity ::=
+--     FixityType Natural_t OperatorList Terminator
+--     ;
+--   </pre>
 fixity :: IdrisParser PDecl
 
 -- | Parses a fixity declaration type (i.e. infix or prefix, associtavity)
---   <tt> FixityType ::= 'infixl' | 'infixr' | 'infix' | <a>prefix</a> ;
---   </tt>
+--   
+--   <pre>
+--   FixityType ::=
+--     'infixl'
+--     | 'infixr'
+--     | 'infix'
+--     | <a>prefix</a>
+--     ;
+--   </pre>
 fixityType :: IdrisParser (Int -> Fixity)
 
 module Idris.ParseExpr
@@ -2801,15 +2843,26 @@ allowImp :: SyntaxInfo -> SyntaxInfo
 -- | Disallow implicit type declarations
 disallowImp :: SyntaxInfo -> SyntaxInfo
 
--- | Parses an expression as a whole <tt> FullExpr ::= Expr EOF_t; </tt>
+-- | Parses an expression as a whole
+--   
+--   <pre>
+--   FullExpr ::= Expr EOF_t;
+--   </pre>
 fullExpr :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses an expression <tt> Expr ::= Expr'; </tt>
+-- | Parses an expression
+--   
+--   <pre>
+--   Expr ::= Expr';
+--   </pre>
 expr :: SyntaxInfo -> IdrisParser PTerm
 
 -- | Parses either an internally defined expression or a user-defined one
---   <tt> Expr' ::= <a>External (User-defined) Syntax</a> | InternalExpr;
---   </tt>
+--   
+--   <pre>
+--   Expr' ::=  <a>External (User-defined) Syntax</a>
+--         |   InternalExpr;
+--   </pre>
 expr' :: SyntaxInfo -> IdrisParser PTerm
 
 -- | Parses a user-defined expression
@@ -2828,76 +2881,192 @@ SynBind :: Name -> SynMatch
 -- | Tries to parse an expression given a user-defined rule
 extension :: SyntaxInfo -> Syntax -> IdrisParser PTerm
 
--- | Parses a (normal) built-in expression <tt> InternalExpr ::= App |
---   MatchApp | UnifyLog | RecordType | SimpleExpr | Lambda | QuoteGoal |
---   Let | RewriteTerm | Pi | DoBlock ; </tt>
+-- | Parses a (normal) built-in expression
+--   
+--   <pre>
+--   InternalExpr ::=
+--     App
+--     | MatchApp
+--     | UnifyLog
+--     | RecordType
+--     | SimpleExpr
+--     | Lambda
+--     | QuoteGoal
+--     | Let
+--     | RewriteTerm
+--     | Pi
+--     | DoBlock
+--     ;
+--   </pre>
 internalExpr :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses a case expression <tt> CaseExpr ::= 'case' Expr 'of' OpenBlock
---   CaseOption+ CloseBlock; </tt>
+-- | Parses a case expression
+--   
+--   <pre>
+--   CaseExpr ::=
+--     'case' Expr 'of' OpenBlock CaseOption+ CloseBlock;
+--   </pre>
 caseExpr :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses a case in a case expression <tt> CaseOption ::= Expr '=&gt;'
---   Expr Terminator ; </tt>
+-- | Parses a case in a case expression
+--   
+--   <pre>
+--   CaseOption ::=
+--     Expr '=&gt;' Expr Terminator
+--     ;
+--   </pre>
 caseOption :: SyntaxInfo -> IdrisParser (PTerm, PTerm)
 
 -- | Parses a proof block <tt> ProofExpr ::= <tt>proof</tt> OpenBlock
 --   Tactic'* CloseBlock ; </tt>
 proofExpr :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses a tactics block <tt> TacticsExpr := <tt>tactics</tt> OpenBlock
---   Tactic'* CloseBlock ; </tt>
+-- | Parses a tactics block
+--   
+--   <pre>
+--   TacticsExpr :=
+--     <tt>tactics</tt> OpenBlock Tactic'* CloseBlock
+--   ;
+--   </pre>
 tacticsExpr :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses a simple expression <tt> SimpleExpr ::= '![' Term ']' |
---   <tt>?</tt> Name | % 'instance' | <tt>refl</tt> ('{' Expr '}')? |
---   ProofExpr | TacticsExpr | CaseExpr | FnName | List | Comprehension |
---   Alt | Idiom | '(' Bracketed | Constant | Type | '_|_' | '_' | ; </tt>
+-- | Parses a simple expression
+--   
+--   <pre>
+--   SimpleExpr ::=
+--     '![' Term ']'
+--     | <tt>?</tt> Name
+--     | % 'instance'
+--     | <tt>refl</tt> ('{' Expr '}')?
+--     | ProofExpr
+--     | TacticsExpr
+--     | CaseExpr
+--     | FnName
+--     | List
+--     | Comprehension
+--     | Alt
+--     | Idiom
+--     | '(' Bracketed
+--     | Constant
+--     | Type
+--     | '_|_'
+--     | '_'
+--     | 
+--     ;
+--   </pre>
 simpleExpr :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses the rest of an expression in braces <tt> Bracketed ::= ')' |
---   Expr ')' | ExprList ')' | Expr <a>**</a> Expr ')' | Operator Expr ')'
---   | Expr Operator ')' | Name <tt>:</tt> Expr <a>**</a> Expr ')' ; </tt>
+-- | Parses the rest of an expression in braces
+--   
+--   <pre>
+--   Bracketed ::=
+--     ')'
+--     | Expr ')'
+--     | ExprList ')'
+--     | Expr <a>**</a> Expr ')'
+--     | Operator Expr ')'
+--     | Expr Operator ')'
+--     | Name <tt>:</tt> Expr <a>**</a> Expr ')'
+--     ;
+--   </pre>
 bracketed :: SyntaxInfo -> IdrisParser PTerm
 
 -- | Finds optimal type for integer constant
 modifyConst :: SyntaxInfo -> FC -> PTerm -> PTerm
 
--- | Parses a list literal expression e.g. [1,2,3] <tt> ListExpr ::= '['
---   ExprList? ']' ; </tt> <tt> ExprList ::= Expr | Expr ',' ExprList ;
---   </tt>
+-- | Parses a list literal expression e.g. [1,2,3]
+--   
+--   <pre>
+--   ListExpr ::=
+--     '[' ExprList? ']'
+--   ;
+--   </pre>
+--   
+--   <pre>
+--   ExprList ::=
+--     Expr
+--     | Expr ',' ExprList
+--     ;
+--   </pre>
 listExpr :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses an alternative expression <tt> Alt ::= '(|' Expr_List '|)';
---   Expr_List ::= Expr' | Expr' ',' Expr_List ; </tt>
+-- | Parses an alternative expression
+--   
+--   <pre>
+--     Alt ::= '(|' Expr_List '|)';
+--   
+--   Expr_List ::=
+--       Expr'
+--       | Expr' ',' Expr_List
+--     ;
+--   </pre>
 alt :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses a possibly hidden simple expression <tt> HSimpleExpr ::=
---   <a>.</a> SimpleExpr | SimpleExpr ; </tt>
+-- | Parses a possibly hidden simple expression
+--   
+--   <pre>
+--   HSimpleExpr ::=
+--     <a>.</a> SimpleExpr
+--     | SimpleExpr
+--     ;
+--   </pre>
 hsimpleExpr :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses a matching application expression <tt> MatchApp ::= SimpleExpr
---   <tt>&lt;==</tt> FnName ; </tt>
+-- | Parses a matching application expression
+--   
+--   <pre>
+--   MatchApp ::=
+--     SimpleExpr <tt>&lt;==</tt> FnName
+--     ;
+--   </pre>
 matchApp :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses a unification log expression UnifyLog ::= <tt>%</tt>
---   <a>unifyLog</a> SimpleExpr ;
+-- | Parses a unification log expression
+--   
+--   <pre>
+--   UnifyLog ::=
+--     <tt>%</tt> <a>unifyLog</a> SimpleExpr
+--     ;
+--   </pre>
 unifyLog :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses a no implicits expression <tt> NoImplicits ::= <tt>%</tt>
---   <a>noImplicits</a> SimpleExpr ; </tt>
+-- | Parses a no implicits expression
+--   
+--   <pre>
+--   NoImplicits ::=
+--     <tt>%</tt> <a>noImplicits</a> SimpleExpr
+--     ;
+--   </pre>
 noImplicits :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses a function application expression <tt> App ::=
---   <tt>mkForeign</tt> Arg Arg* | SimpleExpr Arg+ ; </tt>
+-- | Parses a function application expression
+--   
+--   <pre>
+--   App ::=
+--     <tt>mkForeign</tt> Arg Arg*
+--     | SimpleExpr Arg+
+--     ;
+--   </pre>
 app :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses a function argument <tt> Arg ::= ImplicitArg | ConstraintArg |
---   SimpleExpr ; </tt>
+-- | Parses a function argument
+--   
+--   <pre>
+--   Arg ::=
+--     ImplicitArg
+--     | ConstraintArg
+--     | SimpleExpr
+--     ;
+--   </pre>
 arg :: SyntaxInfo -> IdrisParser PArg
 
--- | Parses an implicit function argument <tt> ImplicitArg ::= '{' Name
---   ('=' Expr)? '}' ; </tt>
+-- | Parses an implicit function argument
+--   
+--   <pre>
+--   ImplicitArg ::=
+--     '{' Name ('=' Expr)? '}'
+--     ;
+--   </pre>
 implicitArg :: SyntaxInfo -> IdrisParser PArg
 
 -- | Parses a constraint argument (for selecting a named type class
@@ -2910,31 +3079,74 @@ implicitArg :: SyntaxInfo -> IdrisParser PArg
 --   </pre>
 constraintArg :: SyntaxInfo -> IdrisParser PArg
 
--- | Parses a record field setter expression <tt> RecordType ::=
---   <tt>record</tt> '{' FieldTypeList '}'; </tt> <tt> FieldTypeList ::=
---   FieldType | FieldType ',' FieldTypeList ; </tt> <tt> FieldType ::=
---   FnName '=' Expr ; </tt>
+-- | Parses a record field setter expression
+--   
+--   <pre>
+--   RecordType ::=
+--     <tt>record</tt> '{' FieldTypeList '}';
+--   </pre>
+--   
+--   <pre>
+--   FieldTypeList ::=
+--     FieldType
+--     | FieldType ',' FieldTypeList
+--     ;
+--   </pre>
+--   
+--   <pre>
+--   FieldType ::=
+--     FnName '=' Expr
+--     ;
+--   </pre>
 recordType :: SyntaxInfo -> IdrisParser PTerm
 
 -- | Creates setters for record types on necessary functions
 mkType :: Name -> Name
 
--- | Parses a type signature <tt> TypeSig ::= <tt>:</tt> Expr ; </tt> <tt>
---   TypeExpr ::= ConstraintList? Expr; </tt>
+-- | Parses a type signature
+--   
+--   <pre>
+--   TypeSig ::=
+--     <tt>:</tt> Expr
+--     ;
+--   </pre>
+--   
+--   <pre>
+--   TypeExpr ::= ConstraintList? Expr;
+--   </pre>
 typeExpr :: SyntaxInfo -> IdrisParser PTerm
 
 -- | Parses a lambda expression <tt> Lambda ::= <a>\\</a> TypeOptDeclList
---   '=&gt;' Expr | <a>\\</a> SimpleExprList '=&gt;' Expr ; </tt> <tt>
---   SimpleExprList ::= SimpleExpr | SimpleExpr ',' SimpleExprList ; </tt>
+--   '=&gt;' Expr | <a>\\</a> SimpleExprList '=&gt;' Expr ; </tt>
+--   
+--   <pre>
+--   SimpleExprList ::=
+--     SimpleExpr
+--     | SimpleExpr ',' SimpleExprList
+--     ;
+--   </pre>
 lambda :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses a term rewrite expression <tt> RewriteTerm ::= <tt>rewrite</tt>
---   Expr (<tt>==&gt;</tt> Expr)? 'in' Expr ; </tt>
+-- | Parses a term rewrite expression
+--   
+--   <pre>
+--   RewriteTerm ::=
+--     <tt>rewrite</tt> Expr (<tt>==&gt;</tt> Expr)? 'in' Expr
+--     ;
+--   </pre>
 rewriteTerm :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses a let binding <tt> Let ::= 'let' Name TypeSig'? '=' Expr 'in'
---   Expr | 'let' Expr' '=' Expr' 'in' Expr TypeSig' ::= <tt>:</tt> Expr' ;
---   </tt>
+-- | Parses a let binding
+--   
+--   <pre>
+--   Let ::=
+--     'let' Name TypeSig'? '=' Expr  'in' Expr
+--   | 'let' Expr'          '=' Expr' 'in' Expr
+--   
+--   TypeSig' ::=
+--     <tt>:</tt> Expr'
+--     ;
+--   </pre>
 let_ :: SyntaxInfo -> IdrisParser PTerm
 
 -- | Parses a quote goal
@@ -2946,10 +3158,16 @@ let_ :: SyntaxInfo -> IdrisParser PTerm
 --   </pre>
 quoteGoal :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses a dependent type signature <tt> Pi ::= '|'? Static? '('
---   TypeDeclList ')' DocComment '-&gt;' Expr | '|'? Static? '{'
---   TypeDeclList '}' '-&gt;' Expr | '{' <tt>auto</tt> TypeDeclList '}'
---   '-&gt;' Expr | '{' 'default' TypeDeclList '}' '-&gt;' Expr ; </tt>
+-- | Parses a dependent type signature
+--   
+--   <pre>
+--   Pi ::=
+--       '|'? Static? '('           TypeDeclList ')' DocComment '-&gt;' Expr
+--     | '|'? Static? '{'           TypeDeclList '}'            '-&gt;' Expr
+--     |              '{' <tt>auto</tt>    TypeDeclList '}'            '-&gt;' Expr
+--     |              '{' 'default' TypeDeclList '}'            '-&gt;' Expr
+--     ;
+--   </pre>
 pi :: SyntaxInfo -> IdrisParser PTerm
 
 -- | Parses a type constraint list
@@ -2962,8 +3180,14 @@ pi :: SyntaxInfo -> IdrisParser PTerm
 --   </pre>
 constraintList :: SyntaxInfo -> IdrisParser [PTerm]
 
--- | Parses a type declaration list <tt> TypeDeclList ::=
---   FunctionSignatureList | NameList TypeSig ; </tt>
+-- | Parses a type declaration list
+--   
+--   <pre>
+--   TypeDeclList ::=
+--       FunctionSignatureList
+--     | NameList TypeSig
+--     ;
+--   </pre>
 --   
 --   <pre>
 --   FunctionSignatureList ::=
@@ -2973,17 +3197,25 @@ constraintList :: SyntaxInfo -> IdrisParser [PTerm]
 --   </pre>
 typeDeclList :: SyntaxInfo -> IdrisParser [(Name, PTerm)]
 
--- | Parses a type declaration list with optional parameters <tt>
---   TypeOptDeclList ::= NameOrPlaceholder TypeSig? | NameOrPlaceholder
---   TypeSig? ',' TypeOptDeclList ; </tt>
+-- | Parses a type declaration list with optional parameters
+--   
+--   <pre>
+--   TypeOptDeclList ::=
+--       NameOrPlaceholder TypeSig?
+--     | NameOrPlaceholder TypeSig? ',' TypeOptDeclList
+--     ;
+--   </pre>
 --   
 --   <pre>
 --   NameOrPlaceHolder ::= Name | '_';
 --   </pre>
 tyOptDeclList :: SyntaxInfo -> IdrisParser [(Name, PTerm)]
 
--- | Parses a list comprehension <tt> Comprehension ::= '[' Expr '|' DoList
---   ']'; </tt>
+-- | Parses a list comprehension
+--   
+--   <pre>
+--   Comprehension ::= '[' Expr '|' DoList ']';
+--   </pre>
 --   
 --   <pre>
 --   DoList ::=
@@ -2993,7 +3225,11 @@ tyOptDeclList :: SyntaxInfo -> IdrisParser [(Name, PTerm)]
 --   </pre>
 comprehension :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses a do-block <tt> Do' ::= Do KeepTerminator; </tt>
+-- | Parses a do-block
+--   
+--   <pre>
+--   Do' ::= Do KeepTerminator;
+--   </pre>
 --   
 --   <pre>
 --   DoBlock ::=
@@ -3002,13 +3238,24 @@ comprehension :: SyntaxInfo -> IdrisParser PTerm
 --   </pre>
 doBlock :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses an expression inside a do block <tt> Do ::= 'let' Name
---   TypeSig'? '=' Expr | 'let' Expr' '=' Expr | Name '&lt;-' Expr | Expr'
---   '&lt;-' Expr | Expr ; </tt>
+-- | Parses an expression inside a do block
+--   
+--   <pre>
+--   Do ::=
+--       'let' Name  TypeSig'?      '=' Expr
+--     | 'let' Expr'                '=' Expr
+--     | Name  '&lt;-' Expr
+--     | Expr' '&lt;-' Expr
+--     | Expr
+--     ;
+--   </pre>
 do_ :: SyntaxInfo -> IdrisParser PDo
 
--- | Parses an expression in idiom brackets <tt> Idiom ::= '[|' Expr '|]';
---   </tt>
+-- | Parses an expression in idiom brackets
+--   
+--   <pre>
+--   Idiom ::= '[|' Expr '|]';
+--   </pre>
 idiom :: SyntaxInfo -> IdrisParser PTerm
 
 -- | Parses a constant or literal expression
@@ -3090,40 +3337,84 @@ fullTactic :: SyntaxInfo -> IdrisParser PTactic
 
 module Idris.ParseData
 
--- | Parses a record type declaration Record ::= DocComment Accessibility?
---   <a>record</a> FnName TypeSig 'where' OpenBlock Constructor
---   KeepTerminator CloseBlock;
+-- | Parses a record type declaration
+--   
+--   <pre>
+--   Record ::=
+--       DocComment Accessibility? <a>record</a> FnName TypeSig 'where' OpenBlock Constructor KeepTerminator CloseBlock;
+--   </pre>
 record :: SyntaxInfo -> IdrisParser PDecl
 
--- | Parses data declaration type (normal or codata) DataI ::= 'data' |
---   <a>codata</a>;
+-- | Parses data declaration type (normal or codata)
+--   
+--   <pre>
+--   DataI ::= 'data' | <a>codata</a>;
+--   </pre>
 dataI :: IdrisParser Bool
 
--- | Parses a data type declaration Data ::= DocComment? Accessibility?
---   DataI FnName TypeSig ExplicitTypeDataRest? | DocComment?
---   Accessibility? DataI FnName Name* DataRest? ; Constructor' ::=
---   Constructor KeepTerminator; ExplicitTypeDataRest ::= 'where' OpenBlock
---   Constructor'* CloseBlock;
+-- | Parses a data type declaration
 --   
---   DataRest ::= '=' SimpleConstructorList Terminator | 'where'! ;
---   SimpleConstructorList ::= SimpleConstructor | SimpleConstructor '|'
---   SimpleConstructorList ;
+--   <pre>
+--   Data ::= DocComment? Accessibility? DataI FnName TypeSig ExplicitTypeDataRest?
+--          | DocComment? Accessibility? DataI FnName Name*   DataRest?
+--          ;
+--   </pre>
+--   
+--   <pre>
+--   Constructor' ::= Constructor KeepTerminator;
+--   </pre>
+--   
+--   <pre>
+--   ExplicitTypeDataRest ::= 'where' OpenBlock Constructor'* CloseBlock;
+--   </pre>
+--   
+--   <pre>
+--   DataRest ::= '=' SimpleConstructorList Terminator
+--              | 'where'!
+--              ;
+--   </pre>
+--   
+--   <pre>
+--   SimpleConstructorList ::=
+--       SimpleConstructor
+--     | SimpleConstructor '|' SimpleConstructorList
+--     ;
+--   </pre>
 data_ :: SyntaxInfo -> IdrisParser PDecl
 
--- | Parses a type constructor declaration Constructor ::= DocComment?
---   FnName TypeSig;
+-- | Parses a type constructor declaration
+--   
+--   <pre>
+--   Constructor ::= DocComment? FnName TypeSig;
+--   </pre>
 constructor :: SyntaxInfo -> IdrisParser (String, Name, PTerm, FC)
 
 -- | Parses a constructor for simple discriminative union data types
+--   
+--   <pre>
 --   SimpleConstructor ::= FnName SimpleExpr* DocComment?
+--   </pre>
 simpleConstructor :: SyntaxInfo -> IdrisParser (String, Name, [PTerm], FC)
+
+-- | Parses a dsl block declaration
+--   
+--   <pre>
+--   DSL ::= <a>dsl</a> FnName OpenBlock Overload'+ CloseBlock;
+--   </pre>
 dsl :: SyntaxInfo -> IdrisParser PDecl
 
 -- | Checks DSL for errors
 checkDSL :: DSL -> IdrisParser ()
 
--- | Parses a DSL overload declaration OverloadIdentifier ::= 'let' |
---   Identifier; Overload ::= OverloadIdentifier '=' Expr;
+-- | Parses a DSL overload declaration
+--   
+--   <pre>
+--   OverloadIdentifier ::= 'let' | Identifier;
+--   </pre>
+--   
+--   <pre>
+--   Overload ::= OverloadIdentifier '=' Expr;
+--   </pre>
 overload :: SyntaxInfo -> IdrisParser (String, PTerm)
 
 module Idris.UnusedArgs
@@ -3244,150 +3535,392 @@ instance Eq ElabWhat
 
 module Idris.Parser
 
--- | Parses module definition ModuleHeader ::= 'module' Identifier_t ';'?;
+-- | Parses module definition
+--   
+--   <pre>
+--   ModuleHeader ::= 'module' Identifier_t ';'?;
+--   </pre>
 moduleHeader :: IdrisParser [String]
 
--- | Parses an import statement Import ::= 'import' Identifier_t ';'?;
+-- | Parses an import statement
+--   
+--   <pre>
+--   Import ::= 'import' Identifier_t ';'?;
+--   </pre>
 import_ :: IdrisParser String
 
--- | Parses program source Prog ::= Decl* EOF;
+-- | Parses program source
+--   
+--   <pre>
+--   Prog ::= Decl* EOF;
+--   </pre>
 prog :: SyntaxInfo -> IdrisParser [PDecl]
+
+-- | Parses a top-level declaration
+--   
+--   <pre>
+--   Decl ::=
+--       Decl'
+--     | Using
+--     | Params
+--     | Mutual
+--     | Namespace
+--     | Class
+--     | Instance
+--     | DSL
+--     | Directive
+--     | Provider
+--     | Transform
+--     | Import!
+--     ;
+--   </pre>
 decl :: SyntaxInfo -> IdrisParser [PDecl]
 
--- | Parses a top-level declaration with possible syntax sugar Decl' ::=
---   Fixity | FunDecl' | Data | Record | SyntaxDecl ;
+-- | Parses a top-level declaration with possible syntax sugar
+--   
+--   <pre>
+--   Decl' ::=
+--       Fixity
+--     | FunDecl'
+--     | Data
+--     | Record
+--     | SyntaxDecl
+--     ;
+--   </pre>
 decl' :: SyntaxInfo -> IdrisParser PDecl
 
 -- | Parses a syntax extension declaration (and adds the rule to parser
---   state) SyntaxDecl ::= SyntaxRule;
+--   state)
+--   
+--   <pre>
+--   SyntaxDecl ::= SyntaxRule;
+--   </pre>
 syntaxDecl :: SyntaxInfo -> IdrisParser PDecl
+
+-- | Parses a syntax extension declaration
+--   
+--   <pre>
+--   SyntaxRuleOpts ::= <tt>term</tt> | <a>pattern</a>;
+--   </pre>
+--   
+--   <pre>
+--   SyntaxRule ::=
+--     SyntaxRuleOpts? <tt>syntax</tt> SyntaxSym+ '=' TypeExpr Terminator;
+--   </pre>
+--   
+--   <pre>
+--   SyntaxSym ::=   '[' Name_t ']'
+--                |  '{' Name_t '}'
+--                |  Name_t
+--                |  StringLiteral_t
+--                ;
+--   </pre>
 syntaxRule :: SyntaxInfo -> IdrisParser Syntax
 
 -- | Parses a syntax symbol (either binding variable, keyword or
---   expression) SyntaxSym ::= '[' Name_t ']' | '{' Name_t '}' | Name_t |
---   StringLiteral_t ;
+--   expression)
+--   
+--   <pre>
+--   SyntaxSym ::=   '[' Name_t ']'
+--                |  '{' Name_t '}'
+--                |  Name_t
+--                |  StringLiteral_t
+--                ;
+--   </pre>
 syntaxSym :: IdrisParser SSymbol
 
--- | Parses a function declaration with possible syntax sugar FunDecl ::=
---   FunDecl';
+-- | Parses a function declaration with possible syntax sugar
+--   
+--   <pre>
+--   FunDecl ::= FunDecl';
+--   </pre>
 fnDecl :: SyntaxInfo -> IdrisParser [PDecl]
+
+-- | Parses a function declaration
+--   
+--   <pre>
+--   FunDecl' ::=
+--    DocComment_t? FnOpts* Accessibility? FnOpts* FnName TypeSig Terminator
+--    | Postulate
+--    | Pattern
+--    | CAF
+--    ;
+--   </pre>
 fnDecl' :: SyntaxInfo -> IdrisParser PDecl
+
+-- | Parses function options given initial options
+--   
+--   <pre>
+--   FnOpts ::= <tt>total</tt>
+--     | <tt>partial</tt>
+--     | <a>implicit</a>
+--     | <tt>%</tt> <tt>assert_total</tt>
+--     | <tt>%</tt> <tt>reflection</tt>
+--     | <tt>%</tt> <a>specialise</a> '[' NameTimesList? ']'
+--     ;
+--   </pre>
+--   
+--   <pre>
+--   NameTimes ::= FnName Natural?;
+--   </pre>
+--   
+--   <pre>
+--   NameTimesList ::=
+--     NameTimes
+--     | NameTimes ',' NameTimesList
+--     ;
+--   </pre>
 fnOpts :: [FnOpt] -> IdrisParser [FnOpt]
 
 -- | Parses a postulate
 --   
---   Postulate ::= DocComment_t? <a>postulate</a> FnOpts* Accesibility?
---   FnOpts* FnName TypeSig Terminator ;
+--   <pre>
+--   Postulate ::=
+--     DocComment_t? <a>postulate</a> FnOpts* Accesibility? FnOpts* FnName TypeSig Terminator
+--     ;
+--   </pre>
 postulate :: SyntaxInfo -> IdrisParser PDecl
 
 -- | Parses a using declaration
 --   
---   Using ::= <a>using</a> '(' UsingDeclList ')' OpenBlock Decl*
---   CloseBlock ;
+--   <pre>
+--   Using ::=
+--     <a>using</a> '(' UsingDeclList ')' OpenBlock Decl* CloseBlock
+--     ;
+--   </pre>
 using_ :: SyntaxInfo -> IdrisParser [PDecl]
 
 -- | Parses a parameters declaration
 --   
---   Params ::= <tt>parameters</tt> '(' TypeDeclList ')' OpenBlock Decl*
---   CloseBlock ;
+--   <pre>
+--   Params ::=
+--     <tt>parameters</tt> '(' TypeDeclList ')' OpenBlock Decl* CloseBlock
+--     ;
+--   </pre>
 params :: SyntaxInfo -> IdrisParser [PDecl]
 
 -- | Parses a mutual declaration (for mutually recursive functions)
 --   
---   Mutual ::= <a>mutual</a> OpenBlock Decl* CloseBlock ;
+--   <pre>
+--   Mutual ::=
+--     <a>mutual</a> OpenBlock Decl* CloseBlock
+--     ;
+--   </pre>
 mutual :: SyntaxInfo -> IdrisParser [PDecl]
+
+-- | Parses a namespace declaration
+--   
+--   <pre>
+--   Namespace ::=
+--     <a>namespace</a> identifier OpenBlock Decl+ CloseBlock
+--     ;
+--   </pre>
 namespace :: SyntaxInfo -> IdrisParser [PDecl]
 
--- | Parses a methods block (for type classes and instances) MethodsBlock
---   ::= 'where' OpenBlock FnDecl* CloseBlock
+-- | Parses a methods block (for type classes and instances)
+--   
+--   <pre>
+--   MethodsBlock ::= 'where' OpenBlock FnDecl* CloseBlock
+--   </pre>
 methodsBlock :: SyntaxInfo -> IdrisParser [PDecl]
 
 -- | Parses a type class declaration
 --   
---   ClassArgument ::= Name | '(' Name <tt>:</tt> Expr ')' ;
+--   <pre>
+--   ClassArgument ::=
+--      Name
+--      | '(' Name <tt>:</tt> Expr ')'
+--      ;
+--   </pre>
 --   
---   Class ::= DocComment_t? Accessibility? 'class' ConstraintList? Name
---   ClassArgument* MethodsBlock? ;
+--   <pre>
+--   Class ::=
+--     DocComment_t? Accessibility? 'class' ConstraintList? Name ClassArgument* MethodsBlock?
+--     ;
+--   </pre>
 class_ :: SyntaxInfo -> IdrisParser [PDecl]
 
 -- | Parses a type class instance declaration
 --   
---   Instance ::= 'instance' InstanceName? ConstraintList? Name SimpleExpr*
---   MethodsBlock? ;
+--   <pre>
+--   Instance ::=
+--     'instance' InstanceName? ConstraintList? Name SimpleExpr* MethodsBlock?
+--     ;
+--   </pre>
 --   
+--   <pre>
 --   InstanceName ::= '[' Name ']';
+--   </pre>
 instance_ :: SyntaxInfo -> IdrisParser [PDecl]
 
--- | Parses a using declaration list UsingDeclList ::= UsingDeclList' |
---   NameList TypeSig ;
+-- | Parses a using declaration list
 --   
---   UsingDeclList' ::= UsingDecl | UsingDecl ',' UsingDeclList' ;
+--   <pre>
+--   UsingDeclList ::=
+--     UsingDeclList'
+--     | NameList TypeSig
+--     ;
+--   </pre>
 --   
---   NameList ::= Name | Name ',' NameList ;
+--   <pre>
+--   UsingDeclList' ::=
+--     UsingDecl
+--     | UsingDecl ',' UsingDeclList'
+--     ;
+--   </pre>
+--   
+--   <pre>
+--   NameList ::=
+--     Name
+--     | Name ',' NameList
+--     ;
+--   </pre>
 usingDeclList :: SyntaxInfo -> IdrisParser [Using]
 
--- | Parses a using declaration UsingDecl ::= FnName TypeSig | FnName
---   FnName+ ;
+-- | Parses a using declaration
+--   
+--   <pre>
+--   UsingDecl ::=
+--     FnName TypeSig
+--     | FnName FnName+
+--     ;
+--   </pre>
 usingDecl :: SyntaxInfo -> IdrisParser Using
 
--- | Parse a clause with patterns Pattern ::= Clause;
+-- | Parse a clause with patterns
+--   
+--   <pre>
+--   Pattern ::= Clause;
+--   </pre>
 pattern :: SyntaxInfo -> IdrisParser PDecl
 
 -- | Parse a constant applicative form declaration CAF ::= 'let' FnName '='
 --   Expr Terminator;
 caf :: SyntaxInfo -> IdrisParser PDecl
 
--- | Parse an argument expression ArgExpr ::= HSimpleExpr | ;
+-- | Parse an argument expression
+--   
+--   <pre>
+--   ArgExpr ::= HSimpleExpr | ;
+--   </pre>
 argExpr :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parse a right hand side of a function RHS ::= '=' Expr | <tt>?=</tt>
---   RHSName? Expr | <tt>impossible</tt> ;
+-- | Parse a right hand side of a function
 --   
+--   <pre>
+--   RHS ::= '='            Expr
+--        |  <tt>?=</tt>  RHSName? Expr
+--        |  <tt>impossible</tt>
+--        ;
+--   </pre>
+--   
+--   <pre>
 --   RHSName ::= '{' FnName '}';
+--   </pre>
 rhs :: SyntaxInfo -> Name -> IdrisParser PTerm
 
--- | Parses a function clause RHSOrWithBlock ::= RHS WhereOrTerminator |
---   <tt>with</tt> SimpleExpr OpenBlock FnDecl+ CloseBlock ; Clause ::=
---   WExpr+ RHSOrWithBlock | SimpleExpr <tt>&lt;==</tt> FnName RHS
---   WhereOrTerminator | ArgExpr Operator ArgExpr WExpr* RHSOrWithBlock |
---   FnName ConstraintArg* ImplicitOrArgExpr* WExpr* RHSOrWithBlock ;
---   ImplicitOrArgExpr ::= ImplicitArg | ArgExpr; WhereOrTerminator ::=
---   WhereBlock | Terminator;
+-- | Parses a function clause
+--   
+--   <pre>
+--   RHSOrWithBlock ::= RHS WhereOrTerminator
+--                  | <tt>with</tt> SimpleExpr OpenBlock FnDecl+ CloseBlock
+--                  ;
+--   </pre>
+--   
+--   <pre>
+--   Clause ::=                                                               WExpr+ RHSOrWithBlock
+--          |   SimpleExpr <tt>&lt;==</tt>  FnName                                             RHS WhereOrTerminator
+--          |   ArgExpr Operator ArgExpr                                      WExpr* RHSOrWithBlock 
+--          |                     FnName ConstraintArg* ImplicitOrArgExpr*    WExpr* RHSOrWithBlock
+--          ;
+--   </pre>
+--   
+--   <pre>
+--   ImplicitOrArgExpr ::= ImplicitArg | ArgExpr;
+--   </pre>
+--   
+--   <pre>
+--   WhereOrTerminator ::= WhereBlock | Terminator;
+--   </pre>
 clause :: SyntaxInfo -> IdrisParser PClause
+
+-- | Parses with pattern
+--   
+--   <pre>
+--   WExpr ::= '|' Expr';
+--   </pre>
 wExpr :: SyntaxInfo -> IdrisParser PTerm
 
--- | Parses a where block WhereBlock ::= 'where' OpenBlock Decl+
---   CloseBlock;
+-- | Parses a where block
+--   
+--   <pre>
+--   WhereBlock ::= 'where' OpenBlock Decl+ CloseBlock;
+--   </pre>
 whereBlock :: Name -> SyntaxInfo -> IdrisParser ([PDecl], [(Name, Name)])
 
--- | Parses a code generation target language name Codegen ::= <tt>C</tt> |
---   <tt>Java</tt> | <tt>JavaScript</tt> | <tt>Node</tt> | <tt>LLVM</tt> |
---   <a>Bytecode</a> ;
+-- | Parses a code generation target language name
+--   
+--   <pre>
+--   Codegen ::= <tt>C</tt>
+--           |   <tt>Java</tt>
+--           |   <tt>JavaScript</tt>
+--           |   <tt>Node</tt>
+--           |   <tt>LLVM</tt>
+--           |   <a>Bytecode</a>
+--           ;
+--   </pre>
 codegen_ :: IdrisParser Codegen
 
--- | Parses a compiler directive StringList ::= String | String ','
---   StringList ;
+-- | Parses a compiler directive
 --   
+--   <pre>
+--   StringList ::=
+--     String
+--     | String ',' StringList
+--     ;
+--   </pre>
+--   
+--   <pre>
 --   Directive ::= <tt>%</tt> Directive';
+--   </pre>
 --   
---   Directive' ::= <tt>lib</tt> CodeGen String_t | <tt>link</tt> CodeGen
---   String_t | <tt>flag</tt> CodeGen String_t | <tt>include</tt> CodeGen
---   String_t | <tt>hide</tt> Name | <tt>freeze</tt> Name | <tt>access</tt>
---   Accessibility | 'default' Totality | <tt>logging</tt> Natural |
---   <tt>dynamic</tt> StringList | <tt>language</tt> <a>TypeProviders</a> |
---   <tt>language</tt> <a>ErrorReflection</a> ;
+--   <pre>
+--   Directive' ::= <tt>lib</tt>      CodeGen String_t
+--              |   <tt>link</tt>     CodeGen String_t
+--              |   <tt>flag</tt>     CodeGen String_t
+--              |   <tt>include</tt>  CodeGen String_t
+--              |   <tt>hide</tt>     Name
+--              |   <tt>freeze</tt>   Name
+--              |   <tt>access</tt>   Accessibility
+--              |   'default'  Totality
+--              |   <tt>logging</tt>  Natural
+--              |   <tt>dynamic</tt>  StringList
+--              |   <tt>language</tt> <a>TypeProviders</a>
+--              |   <tt>language</tt> <a>ErrorReflection</a>
+--              ;
+--   </pre>
 directive :: SyntaxInfo -> IdrisParser [PDecl]
 pLangExt :: IdrisParser LanguageExt
 
--- | Parses a totality Totality ::= <tt>partial</tt> | <tt>total</tt>
+-- | Parses a totality
+--   
+--   <pre>
+--   Totality ::= <tt>partial</tt> | <tt>total</tt>
+--   </pre>
 totality :: IdrisParser Bool
 
--- | Parses a type provider Provider ::= <tt>%</tt> <tt>provide</tt> '('
---   FnName TypeSig ')' <tt>with</tt> Expr;
+-- | Parses a type provider
+--   
+--   <pre>
+--   Provider ::= <tt>%</tt> <tt>provide</tt> '(' FnName TypeSig ')' <tt>with</tt> Expr;
+--   </pre>
 provider :: SyntaxInfo -> IdrisParser [PDecl]
 
--- | Parses a transform Transform ::= <tt>%</tt> <a>transform</a> Expr
---   <tt>==&gt;</tt> Expr
+-- | Parses a transform
+--   
+--   <pre>
+--   Transform ::= <tt>%</tt> <a>transform</a> Expr <tt>==&gt;</tt> Expr
+--   </pre>
 transform :: SyntaxInfo -> IdrisParser [PDecl]
 
 -- | Parses an expression from input
