@@ -1,0 +1,10 @@
+---
+layout: post
+title: "Idris 0.9.10"
+date: 2013-11-29 10:55:28 +0000
+comments: true
+categories: 
+---
+
+`\O/` [Idris 0.9.10](http://www.idris-lang.org/idris-0-9-10-released/) is out.
+Haddock files have been updated on this site.

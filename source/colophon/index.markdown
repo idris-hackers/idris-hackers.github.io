@@ -32,6 +32,7 @@ $ git clone git@github.com:idris-hackers/idris-hackers.github.io.git website
 $ cd website
 $ git checkout source
 $ bundle install
+$ rake setup_github_pages // using git@github.com:idris-hackers/idris-hackers.github.io.git
 $ rake new_post["My First Post"]
 $ $EDITOR source/_posts/2013-11-21-my-first-post.markdown
 $ rake generate
