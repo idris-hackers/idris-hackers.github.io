@@ -15,18 +15,16 @@ window.onload = function () {pageLoad();setSynopsis("mini_Idris-ParseOps.html");
 </p><pre>
   FnName ::= Name | OperatorFront;
 </pre></div></div><div class="top"><p class="src"><a name="v:fixity" class="def">fixity</a> :: <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PDecl">PDecl</a><a href="src/Idris-ParseOps.html#fixity" class="link">Source</a></p><div class="doc"><p>Parses a fixity declaration
-<code>
+</p><pre>
 Fixity ::=
   FixityType Natural_t OperatorList Terminator
   ;
-</code>
-</p></div></div><div class="top"><p class="src"><a name="v:fixityType" class="def">fixityType</a> :: <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> (<a href="http://hackage.haskell.org/packages/archive/base/latest/doc/html/Data-Int.html#t:Int">Int</a> -&gt; <a href="Idris-AbsSyntaxTree.html#t:Fixity">Fixity</a>)<a href="src/Idris-ParseOps.html#fixityType" class="link">Source</a></p><div class="doc"><p>Parses a fixity declaration type (i.e. infix or prefix, associtavity)
-<code>
+</pre></div></div><div class="top"><p class="src"><a name="v:fixityType" class="def">fixityType</a> :: <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> (<a href="http://hackage.haskell.org/packages/archive/base/latest/doc/html/Data-Int.html#t:Int">Int</a> -&gt; <a href="Idris-AbsSyntaxTree.html#t:Fixity">Fixity</a>)<a href="src/Idris-ParseOps.html#fixityType" class="link">Source</a></p><div class="doc"><p>Parses a fixity declaration type (i.e. infix or prefix, associtavity)
+</p><pre>
     FixityType ::=
       'infixl'
       | 'infixr'
       | 'infix'
       | <code><a href="Idris-ParseOps.html#v:prefix">prefix</a></code>
       ;
-</code>
-</p></div></div></div></div><div id="footer"><p>Produced by <a href="http://www.haskell.org/haddock/">Haddock</a> version 2.13.2</p></div></body></html>
+</pre></div></div></div></div><div id="footer"><p>Produced by <a href="http://www.haskell.org/haddock/">Haddock</a> version 2.13.2</p></div></body></html>
