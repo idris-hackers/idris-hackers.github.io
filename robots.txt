@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: 
+
+Sitemap: http://idris-hackers.github.io/sitemap.xml 

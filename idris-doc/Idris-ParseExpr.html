@@ -1,0 +1,358 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Idris.ParseExpr</title><link href="ocean.css" rel="stylesheet" type="text/css" title="Ocean" /><script src="haddock-util.js" type="text/javascript"></script><script type="text/javascript">//<![CDATA[
+window.onload = function () {pageLoad();setSynopsis("mini_Idris-ParseExpr.html");};
+//]]>
+</script></head><body><div id="package-header"><ul class="links" id="page-menu"><li><a href="src/Idris-ParseExpr.html">Source</a></li><li><a href="index.html">Contents</a></li><li><a href="doc-index.html">Index</a></li></ul><p class="caption">idris</p></div><div id="content"><div id="module-header"><table class="info"><tr><th>Safe Haskell</th><td>None</td></tr></table><p class="caption">Idris.ParseExpr</p></div><div id="synopsis"><p id="control.syn" class="caption expander" onclick="toggleSection('syn')">Synopsis</p><ul id="section.syn" class="hide" onclick="toggleSection('syn')"><li class="src short"><a href="#v:allowImp">allowImp</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a></li><li class="src short"><a href="#v:disallowImp">disallowImp</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a></li><li class="src short"><a href="#v:fullExpr">fullExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:expr">expr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:expr-39-">expr'</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:externalExpr">externalExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:simpleExternalExpr">simpleExternalExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:extensions">extensions</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; [<a href="Idris-AbsSyntaxTree.html#t:Syntax">Syntax</a>] -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><span class="keyword">data</span>  <a href="#t:SynMatch">SynMatch</a> <ul class="subs"><li>= <a href="#v:SynTm">SynTm</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a>  </li><li>| <a href="#v:SynBind">SynBind</a> <a href="Core-TT.html#t:Name">Name</a>  </li></ul></li><li class="src short"><a href="#v:extension">extension</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-AbsSyntaxTree.html#t:Syntax">Syntax</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:internalExpr">internalExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:caseExpr">caseExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:caseOption">caseOption</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> (<a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a>, <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a>)</li><li class="src short"><a href="#v:proofExpr">proofExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:tacticsExpr">tacticsExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:simpleExpr">simpleExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:bracketed">bracketed</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:modifyConst">modifyConst</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Core-TT.html#t:FC">FC</a> -&gt; <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a> -&gt; <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:listExpr">listExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:alt">alt</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:hsimpleExpr">hsimpleExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:matchApp">matchApp</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:unifyLog">unifyLog</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:noImplicits">noImplicits</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:app">app</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:arg">arg</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PArg">PArg</a></li><li class="src short"><a href="#v:implicitArg">implicitArg</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PArg">PArg</a></li><li class="src short"><a href="#v:constraintArg">constraintArg</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PArg">PArg</a></li><li class="src short"><a href="#v:recordType">recordType</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:mkType">mkType</a> :: <a href="Core-TT.html#t:Name">Name</a> -&gt; <a href="Core-TT.html#t:Name">Name</a></li><li class="src short"><a href="#v:typeExpr">typeExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:lambda">lambda</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:rewriteTerm">rewriteTerm</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:let_">let_</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:quoteGoal">quoteGoal</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:pi">pi</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:constraintList">constraintList</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> [<a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a>]</li><li class="src short"><a href="#v:typeDeclList">typeDeclList</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> [(<a href="Core-TT.html#t:Name">Name</a>, <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a>)]</li><li class="src short"><a href="#v:tyOptDeclList">tyOptDeclList</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> [(<a href="Core-TT.html#t:Name">Name</a>, <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a>)]</li><li class="src short"><a href="#v:comprehension">comprehension</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:doBlock">doBlock</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:do_">do_</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PDo">PDo</a></li><li class="src short"><a href="#v:idiom">idiom</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></li><li class="src short"><a href="#v:constant">constant</a> :: <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Core-TT.html#t:Const">Const</a></li><li class="src short"><a href="#v:static">static</a> :: <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:Static">Static</a></li><li class="src short"><a href="#v:tactic">tactic</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTactic">PTactic</a></li><li class="src short"><a href="#v:fullTactic">fullTactic</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTactic">PTactic</a></li></ul></div><div id="interface"><h1>Documentation</h1><div class="top"><p class="src"><a name="v:allowImp" class="def">allowImp</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a><a href="src/Idris-ParseExpr.html#allowImp" class="link">Source</a></p><div class="doc"><p>Allow implicit type declarations
+</p></div></div><div class="top"><p class="src"><a name="v:disallowImp" class="def">disallowImp</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a><a href="src/Idris-ParseExpr.html#disallowImp" class="link">Source</a></p><div class="doc"><p>Disallow implicit type declarations
+</p></div></div><div class="top"><p class="src"><a name="v:fullExpr" class="def">fullExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#fullExpr" class="link">Source</a></p><div class="doc"><p>Parses an expression as a whole
+<code>
+  FullExpr ::= Expr EOF_t;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:expr" class="def">expr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#expr" class="link">Source</a></p><div class="doc"><p>Parses an expression
+<code>
+  Expr ::= Expr';
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:expr-39-" class="def">expr'</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#expr%27" class="link">Source</a></p><div class="doc"><p>Parses either an internally defined expression or
+    a user-defined one
+<code>
+Expr' ::=  <a href="External (User-defined) Syntax.html">External (User-defined) Syntax</a>
+      |   InternalExpr;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:externalExpr" class="def">externalExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#externalExpr" class="link">Source</a></p><div class="doc"><p>Parses a user-defined expression 
+</p></div></div><div class="top"><p class="src"><a name="v:simpleExternalExpr" class="def">simpleExternalExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#simpleExternalExpr" class="link">Source</a></p><div class="doc"><p>Parses a simple user-defined expression 
+</p></div></div><div class="top"><p class="src"><a name="v:extensions" class="def">extensions</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; [<a href="Idris-AbsSyntaxTree.html#t:Syntax">Syntax</a>] -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#extensions" class="link">Source</a></p><div class="doc"><p>Tries to parse a user-defined expression given a list of syntactic extensions 
+</p></div></div><div class="top"><p class="src"><span class="keyword">data</span>  <a name="t:SynMatch" class="def">SynMatch</a>  <a href="src/Idris-ParseExpr.html#SynMatch" class="link">Source</a></p><div class="subs constructors"><p class="caption">Constructors</p><table><tr><td class="src"><a name="v:SynTm" class="def">SynTm</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a></td><td class="doc empty">&nbsp;</td></tr><tr><td class="src"><a name="v:SynBind" class="def">SynBind</a> <a href="Core-TT.html#t:Name">Name</a></td><td class="doc empty">&nbsp;</td></tr></table></div></div><div class="top"><p class="src"><a name="v:extension" class="def">extension</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-AbsSyntaxTree.html#t:Syntax">Syntax</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#extension" class="link">Source</a></p><div class="doc"><p>Tries to parse an expression given a user-defined rule 
+</p></div></div><div class="top"><p class="src"><a name="v:internalExpr" class="def">internalExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#internalExpr" class="link">Source</a></p><div class="doc"><p>Parses a (normal) built-in expression
+<code>
+InternalExpr ::=
+  App
+  | MatchApp
+  | UnifyLog
+  | RecordType
+  | SimpleExpr
+  | Lambda
+  | QuoteGoal
+  | Let
+  | RewriteTerm
+  | Pi
+  | DoBlock
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:caseExpr" class="def">caseExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#caseExpr" class="link">Source</a></p><div class="doc"><p>Parses a case expression
+<code>
+CaseExpr ::=
+  'case' Expr 'of' OpenBlock CaseOption+ CloseBlock;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:caseOption" class="def">caseOption</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> (<a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a>, <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a>)<a href="src/Idris-ParseExpr.html#caseOption" class="link">Source</a></p><div class="doc"><p>Parses a case in a case expression
+<code>
+CaseOption ::=
+  Expr '=&gt;' Expr Terminator
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:proofExpr" class="def">proofExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#proofExpr" class="link">Source</a></p><div class="doc"><p>Parses a proof block
+<code>
+ProofExpr ::=
+  <code>proof</code> OpenBlock Tactic'* CloseBlock
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:tacticsExpr" class="def">tacticsExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#tacticsExpr" class="link">Source</a></p><div class="doc"><p>Parses a tactics block
+<code>
+TacticsExpr :=
+  <code>tactics</code> OpenBlock Tactic'* CloseBlock
+;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:simpleExpr" class="def">simpleExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#simpleExpr" class="link">Source</a></p><div class="doc"><p>Parses a simple expression
+<code>
+SimpleExpr ::=
+  '![' Term ']'
+  | <code>?</code> Name
+  | % 'instance'
+  | <code>refl</code> ('{' Expr '}')?
+  | ProofExpr
+  | TacticsExpr
+  | CaseExpr
+  | FnName
+  | List
+  | Comprehension
+  | Alt
+  | Idiom
+  | '(' Bracketed
+  | Constant
+  | Type
+  | '_|_'
+  | '_'
+  | 
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:bracketed" class="def">bracketed</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#bracketed" class="link">Source</a></p><div class="doc"><p>Parses the rest of an expression in braces
+<code>
+Bracketed ::=
+  ')'
+  | Expr ')'
+  | ExprList ')'
+  | Expr <code><a href="http://hackage.haskell.org/packages/archive/base/latest/doc/html/Prelude.html#v:-42--42-">**</a></code> Expr ')'
+  | Operator Expr ')'
+  | Expr Operator ')'
+  | Name <code>:</code> Expr <code><a href="http://hackage.haskell.org/packages/archive/base/latest/doc/html/Prelude.html#v:-42--42-">**</a></code> Expr ')'
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:modifyConst" class="def">modifyConst</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Core-TT.html#t:FC">FC</a> -&gt; <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a> -&gt; <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#modifyConst" class="link">Source</a></p><div class="doc"><p>Finds optimal type for integer constant 
+</p></div></div><div class="top"><p class="src"><a name="v:listExpr" class="def">listExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#listExpr" class="link">Source</a></p><div class="doc"><p>Parses a list literal expression e.g. [1,2,3]
+<code>
+ListExpr ::=
+  '[' ExprList? ']'
+;
+</code>
+<code>
+ExprList ::=
+  Expr
+  | Expr ',' ExprList
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:alt" class="def">alt</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#alt" class="link">Source</a></p><div class="doc"><p>Parses an alternative expression
+<code>
+  Alt ::= '(|' Expr_List '|)';
+
+Expr_List ::=
+    Expr'
+    | Expr' ',' Expr_List
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:hsimpleExpr" class="def">hsimpleExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#hsimpleExpr" class="link">Source</a></p><div class="doc"><p>Parses a possibly hidden simple expression
+<code>
+HSimpleExpr ::=
+  <code><a href="http://hackage.haskell.org/packages/archive/base/latest/doc/html/Prelude.html#v:.">.</a></code> SimpleExpr
+  | SimpleExpr
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:matchApp" class="def">matchApp</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#matchApp" class="link">Source</a></p><div class="doc"><p>Parses a matching application expression
+<code>
+MatchApp ::=
+  SimpleExpr <code>&lt;==</code> FnName
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:unifyLog" class="def">unifyLog</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#unifyLog" class="link">Source</a></p><div class="doc"><p>Parses a unification log expression
+UnifyLog ::=
+  <code>%</code> <code><a href="Idris-ParseExpr.html#v:unifyLog">unifyLog</a></code> SimpleExpr
+  ;
+</p></div></div><div class="top"><p class="src"><a name="v:noImplicits" class="def">noImplicits</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#noImplicits" class="link">Source</a></p><div class="doc"><p>Parses a no implicits expression
+<code>
+NoImplicits ::=
+  <code>%</code> <code><a href="Idris-ParseExpr.html#v:noImplicits">noImplicits</a></code> SimpleExpr
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:app" class="def">app</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#app" class="link">Source</a></p><div class="doc"><p>Parses a function application expression
+<code>
+App ::=
+  <code>mkForeign</code> Arg Arg*
+  | SimpleExpr Arg+
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:arg" class="def">arg</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PArg">PArg</a><a href="src/Idris-ParseExpr.html#arg" class="link">Source</a></p><div class="doc"><p>Parses a function argument
+<code>
+Arg ::=
+  ImplicitArg
+  | ConstraintArg
+  | SimpleExpr
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:implicitArg" class="def">implicitArg</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PArg">PArg</a><a href="src/Idris-ParseExpr.html#implicitArg" class="link">Source</a></p><div class="doc"><p>Parses an implicit function argument
+<code>
+ImplicitArg ::=
+  '{' Name ('=' Expr)? '}'
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:constraintArg" class="def">constraintArg</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PArg">PArg</a><a href="src/Idris-ParseExpr.html#constraintArg" class="link">Source</a></p><div class="doc"><p>Parses a constraint argument (for selecting a named type class instance)
+</p><pre>    ConstraintArg ::=
+      '@{' Expr '}'
+      ;
+</pre></div></div><div class="top"><p class="src"><a name="v:recordType" class="def">recordType</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#recordType" class="link">Source</a></p><div class="doc"><p>Parses a record field setter expression
+<code>
+RecordType ::=
+  <code>record</code> '{' FieldTypeList '}';
+</code>
+<code>
+FieldTypeList ::=
+  FieldType
+  | FieldType ',' FieldTypeList
+  ;
+</code>
+<code>
+FieldType ::=
+  FnName '=' Expr
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:mkType" class="def">mkType</a> :: <a href="Core-TT.html#t:Name">Name</a> -&gt; <a href="Core-TT.html#t:Name">Name</a><a href="src/Idris-ParseExpr.html#mkType" class="link">Source</a></p><div class="doc"><p>Creates setters for record types on necessary functions
+</p></div></div><div class="top"><p class="src"><a name="v:typeExpr" class="def">typeExpr</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#typeExpr" class="link">Source</a></p><div class="doc"><p>Parses a type signature
+<code>
+TypeSig ::=
+  <code>:</code> Expr
+  ;
+</code>
+<code>
+TypeExpr ::= ConstraintList? Expr;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:lambda" class="def">lambda</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#lambda" class="link">Source</a></p><div class="doc"><p>Parses a lambda expression
+<code>
+Lambda ::=
+    <code><a href="http://hackage.haskell.org/packages/archive/base/latest/doc/html/Data-List.html#v:-92--92-">\\</a></code> TypeOptDeclList '=&gt;' Expr
+  | <code><a href="http://hackage.haskell.org/packages/archive/base/latest/doc/html/Data-List.html#v:-92--92-">\\</a></code> SimpleExprList  '=&gt;' Expr
+  ;
+</code>
+<code>
+SimpleExprList ::=
+  SimpleExpr
+  | SimpleExpr ',' SimpleExprList
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:rewriteTerm" class="def">rewriteTerm</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#rewriteTerm" class="link">Source</a></p><div class="doc"><p>Parses a term rewrite expression
+<code>
+RewriteTerm ::=
+  <code>rewrite</code> Expr (<code>==&gt;</code> Expr)? 'in' Expr
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:let_" class="def">let_</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#let_" class="link">Source</a></p><div class="doc"><p>Parses a let binding
+<code>
+Let ::=
+  'let' Name TypeSig'? '=' Expr  'in' Expr
+| 'let' Expr'          '=' Expr' 'in' Expr
+
+TypeSig' ::=
+  <code>:</code> Expr'
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:quoteGoal" class="def">quoteGoal</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#quoteGoal" class="link">Source</a></p><div class="doc"><p>Parses a quote goal
+</p><pre>
+QuoteGoal ::=
+  <code><a href="Idris-ParseExpr.html#v:quoteGoal">quoteGoal</a></code> Name <code>by</code> Expr 'in' Expr
+  ;
+</pre></div></div><div class="top"><p class="src"><a name="v:pi" class="def">pi</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#pi" class="link">Source</a></p><div class="doc"><p>Parses a dependent type signature
+<code>
+Pi ::=
+    '|'? Static? '('           TypeDeclList ')' DocComment '-&gt;' Expr
+  | '|'? Static? '{'           TypeDeclList '}'            '-&gt;' Expr
+  |              '{' <code>auto</code>    TypeDeclList '}'            '-&gt;' Expr
+  |              '{' 'default' TypeDeclList '}'            '-&gt;' Expr
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:constraintList" class="def">constraintList</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> [<a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a>]<a href="src/Idris-ParseExpr.html#constraintList" class="link">Source</a></p><div class="doc"><p>Parses a type constraint list
+</p><pre>
+ConstraintList ::=
+    '(' Expr_List ')' '=&gt;'
+  | Expr              '=&gt;'
+  ;
+</pre></div></div><div class="top"><p class="src"><a name="v:typeDeclList" class="def">typeDeclList</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> [(<a href="Core-TT.html#t:Name">Name</a>, <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a>)]<a href="src/Idris-ParseExpr.html#typeDeclList" class="link">Source</a></p><div class="doc"><p>Parses a type declaration list
+<code>
+TypeDeclList ::=
+    FunctionSignatureList
+  | NameList TypeSig
+  ;
+</code>
+</p><pre>
+FunctionSignatureList ::=
+    Name TypeSig
+  | Name TypeSig ',' FunctionSignatureList
+  ;
+</pre></div></div><div class="top"><p class="src"><a name="v:tyOptDeclList" class="def">tyOptDeclList</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> [(<a href="Core-TT.html#t:Name">Name</a>, <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a>)]<a href="src/Idris-ParseExpr.html#tyOptDeclList" class="link">Source</a></p><div class="doc"><p>Parses a type declaration list with optional parameters
+<code>
+TypeOptDeclList ::=
+    NameOrPlaceholder TypeSig?
+  | NameOrPlaceholder TypeSig? ',' TypeOptDeclList
+  ;
+</code>
+</p><pre>
+NameOrPlaceHolder ::= Name | '_';
+</pre></div></div><div class="top"><p class="src"><a name="v:comprehension" class="def">comprehension</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#comprehension" class="link">Source</a></p><div class="doc"><p>Parses a list comprehension
+<code>
+Comprehension ::= '[' Expr '|' DoList ']';
+</code>
+</p><pre>
+DoList ::=
+    Do
+  | Do ',' DoList
+  ;
+</pre></div></div><div class="top"><p class="src"><a name="v:doBlock" class="def">doBlock</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#doBlock" class="link">Source</a></p><div class="doc"><p>Parses a do-block
+<code>
+Do' ::= Do KeepTerminator;
+</code>
+</p><pre>
+DoBlock ::=
+  'do' OpenBlock Do'+ CloseBlock
+  ;
+</pre></div></div><div class="top"><p class="src"><a name="v:do_" class="def">do_</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PDo">PDo</a><a href="src/Idris-ParseExpr.html#do_" class="link">Source</a></p><div class="doc"><p>Parses an expression inside a do block
+<code>
+Do ::=
+    'let' Name  TypeSig'?      '=' Expr
+  | 'let' Expr'                '=' Expr
+  | Name  '&lt;-' Expr
+  | Expr' '&lt;-' Expr
+  | Expr
+  ;
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:idiom" class="def">idiom</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTerm">PTerm</a><a href="src/Idris-ParseExpr.html#idiom" class="link">Source</a></p><div class="doc"><p>Parses an expression in idiom brackets
+<code>
+Idiom ::= '[|' Expr '|]';
+</code>
+</p></div></div><div class="top"><p class="src"><a name="v:constant" class="def">constant</a> :: <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Core-TT.html#t:Const">Const</a><a href="src/Idris-ParseExpr.html#constant" class="link">Source</a></p><div class="doc"><p>Parses a constant or literal expression
+</p><pre>
+Constant ::=
+    <code><a href="http://hackage.haskell.org/packages/archive/base/latest/doc/html/Prelude.html#t:Integer">Integer</a></code>
+  | <code><a href="http://hackage.haskell.org/packages/archive/base/latest/doc/html/Data-Int.html#t:Int">Int</a></code>
+  | <code><a href="http://hackage.haskell.org/packages/archive/base/latest/doc/html/Data-Char.html#t:Char">Char</a></code>
+  | <code><a href="http://hackage.haskell.org/packages/archive/base/latest/doc/html/Prelude.html#t:Float">Float</a></code>
+  | <code><a href="http://hackage.haskell.org/packages/archive/base/latest/doc/html/Data-String.html#t:String">String</a></code>
+  | <code>Ptr</code>
+  | <code>Bits8</code>
+  | <code>Bits16</code>
+  | <code>Bits32</code>
+  | <code>Bits64</code>
+  | <code>Bits8x16</code>
+  | <code>Bits16x8</code>
+  | <code>Bits32x4</code>
+  | <code>Bits64x2</code>
+  | Float_t
+  | Natural_t
+  | String_t
+  | Char_t
+  ;
+</pre></div></div><div class="top"><p class="src"><a name="v:static" class="def">static</a> :: <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:Static">Static</a><a href="src/Idris-ParseExpr.html#static" class="link">Source</a></p><div class="doc"><p>Parses a static modifier
+</p><pre>
+Static ::=
+  '[' static ']'
+;
+</pre></div></div><div class="top"><p class="src"><a name="v:tactic" class="def">tactic</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTactic">PTactic</a><a href="src/Idris-ParseExpr.html#tactic" class="link">Source</a></p><div class="doc"><p>Parses a tactic script
+</p><pre>
+Tactic ::= <code>intro</code> NameList?
+       |   <code>intros</code>
+       |   <code>refine</code>      Name Imp+
+       |   <code>mrefine</code>     Name
+       |   <code>rewrite</code>     Expr
+       |   <code>equiv</code>       Expr
+       |   'let'         Name <code>:</code> Expr' '=' Expr
+       |   'let'         Name           '=' Expr
+       |   <code>focus</code>       Name
+       |   <code>exact</code>       Expr
+       |   <code>applyTactic</code> Expr
+       |   <code>reflect</code>     Expr
+       |   <code>fill</code>        Expr
+       |   <code>try</code>         Tactic '|' Tactic
+       |   '{' TacticSeq '}'
+       |   <code>compute</code>
+       |   <code>trivial</code>
+       |   <code>solve</code>
+       |   <code>attack</code>
+       |   <code><a href="http://hackage.haskell.org/packages/archive/mtl/latest/doc/html/Control-Monad-State-Class.html#v:state">state</a></code>
+       |   <code>term</code>
+       |   <code>undo</code>
+       |   <code>qed</code>
+       |   <code>abandon</code>
+       |   <code>:</code> <code>q</code>
+       ;
+
+Imp ::= <code>?</code> | '_';
+
+TacticSeq ::=
+    Tactic ';' Tactic
+  | Tactic ';' TacticSeq
+  ;
+</pre></div></div><div class="top"><p class="src"><a name="v:fullTactic" class="def">fullTactic</a> :: <a href="Idris-AbsSyntaxTree.html#t:SyntaxInfo">SyntaxInfo</a> -&gt; <a href="Idris-ParseHelpers.html#t:IdrisParser">IdrisParser</a> <a href="Idris-AbsSyntaxTree.html#t:PTactic">PTactic</a><a href="src/Idris-ParseExpr.html#fullTactic" class="link">Source</a></p><div class="doc"><p>Parses a tactic as a whole
+</p></div></div></div></div><div id="footer"><p>Produced by <a href="http://www.haskell.org/haddock/">Haddock</a> version 2.13.2</p></div></body></html>

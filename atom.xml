@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Idris Hackers]]></title>
+  <link href="http://idris-hackers.github.io/atom.xml" rel="self"/>
+  <link href="http://idris-hackers.github.io/"/>
+  <updated>2013-11-29T11:06:56+00:00</updated>
+  <id>http://idris-hackers.github.io/</id>
+  <author>
+    <name><![CDATA[The Idris Community]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Idris 0.9.10]]></title>
+    <link href="http://idris-hackers.github.io/blog/2013/11/29/idris-0-dot-9-10/"/>
+    <updated>2013-11-29T10:55:28+00:00</updated>
+    <id>http://idris-hackers.github.io/blog/2013/11/29/idris-0-dot-9-10</id>
+    <content type="html"><![CDATA[<p><code>\O/</code> <a href="http://www.idris-lang.org/idris-0-9-10-released/">Idris 0.9.10</a> is out.
+Haddock files have been updated on this site.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[New Idris Hackers Web Page]]></title>
+    <link href="http://idris-hackers.github.io/blog/2013/11/21/new-idris-hackers-web-page/"/>
+    <updated>2013-11-21T15:56:44+00:00</updated>
+    <id>http://idris-hackers.github.io/blog/2013/11/21/new-idris-hackers-web-page</id>
+    <content type="html"><![CDATA[<p>Welcome to the completely unfinished community Idris site.
+Version 2.0</p>
+]]></content>
+  </entry>
+  
+</feed>

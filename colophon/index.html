@@ -5,13 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Idris Hackers</title>
+  <title>Colophon - Idris Hackers</title>
   <meta name="author" content="The Idris Community">
 
   
-  <meta name="description" content="\O/ Idris 0.9.10 is out.
-Haddock files have been updated on this site.
-">
+  <meta name="description" content="Colophon Nov 29th, 2013 This site is clearly powered by the Octopress.
+Handy links for working with Octopress are as follows: The main documentation &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -20,7 +19,7 @@ Haddock files have been updated on this site.
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://idris-hackers.github.io">
+  <link rel="canonical" href="http://idris-hackers.github.io/colophon">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="Idris Hackers" type="application/atom+xml">
@@ -66,19 +65,91 @@ Haddock files have been updated on this site.
 </nav>
   <div id="main">
     <div id="content">
-      <div class="blog-index">
+      <div>
+<article role="article">
   
-  
-  
-    <article>
-      
   <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/11/29/idris-0-dot-9-10/">Idris 0.9.10</a></h1>
-    
-    
+    <h1 class="entry-title">Colophon</h1>
+    <p class="meta">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-11-29T10:44:00+00:00" pubdate data-updated="true">Nov 29<span>th</span>, 2013</time></p>
+  </header>
+  
+  <p>This site is clearly powered by the <a href="http://octopress.org/">Octopress</a>.
+Handy links for working with Octopress are as follows:</p>
+
+<p>The main <a href="http://octopress.org/docs/">documentation</a> also has more information.</p>
+
+<ul>
+<li><a href="http://octopress.org/docs/setup/">Setup</a></li>
+<li><a href="http://octopress.org/docs/deploying/github">Deploying with Github</a></li>
+<li><a href="http://octopress.org/docs/blogging/">Blogging Basics</a></li>
+</ul>
+
+
+<p>Handy default steps for blogging:</p>
+
+<ol>
+<li>Ensure you have the correct environment for working with Octopress</li>
+<li>Clone the sites octopress instance:</li>
+<li>Checkout the source branch</li>
+<li>Generate content</li>
+<li>Generate new site</li>
+<li>Deploy new sites</li>
+<li>Commit new content</li>
+<li>push source back.</li>
+</ol>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git clone git@github.com:idris-hackers/idris-hackers.github.io.git website
+</span><span class='line'>$ cd website
+</span><span class='line'>$ git checkout source
+</span><span class='line'>$ bundle install
+</span><span class='line'>$ rake setup_github_pages // using git@github.com:idris-hackers/idris-hackers.github.io.git
+</span><span class='line'>$ rake new_post["My First Post"]
+</span><span class='line'>$ $EDITOR source/_posts/2013-11-21-my-first-post.markdown
+</span><span class='line'>$ rake generate
+</span><span class='line'>$ rake deploy
+</span><span class='line'>$ git add .
+</span><span class='line'>$ git commit -m "A handy message"
+</span><span class='line'>$ git push origin source</span></code></pre></td></tr></table></div></figure>
+
+
+<p>For Ubuntu to set up your Octopress environment:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ sudo apt-get install ruby1.9.3
+</span><span class='line'>$ sudo gem install bundle</span></code></pre></td></tr></table></div></figure>
+
+
+  
+    <footer>
       <p class="meta">
         
+        
 
 
 
@@ -90,72 +161,23 @@ Haddock files have been updated on this site.
   
 
 
-<time datetime="2013-11-29T10:55:28+00:00" pubdate data-updated="true">Nov 29<span>th</span>, 2013</time>
+<time datetime="2013-11-29T10:44:00+00:00" pubdate data-updated="true">Nov 29<span>th</span>, 2013</time>
         
       </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><code>\O/</code> <a href="http://www.idris-lang.org/idris-0-9-10-released/">Idris 0.9.10</a> is out.
-Haddock files have been updated on this site.</p>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
       
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/11/21/new-idris-hackers-web-page/">New Idris Hackers Web Page</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
+    </footer>
   
+</article>
 
-
-<time datetime="2013-11-21T15:56:44+00:00" pubdate data-updated="true">Nov 21<span>st</span>, 2013</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Welcome to the completely unfinished community Idris site.
-Version 2.0</p>
 </div>
-  
-  
 
-
-    </article>
-  
-  <div class="pagination">
-    
-    <a href="/blog/archives">Blog Archives</a>
-    
-  </div>
-</div>
 <aside class="sidebar">
   
     
 <section>
   <h1>GitHub Repos</h1>
   <ul id="gh_repos">
-    <li class="loading">Status updating&#8230;</li>
+    <li class="loading">Status updating...</li>
   </ul>
   
   <a href="https://github.com/idris-hackers">@idris-hackers</a> on GitHub
@@ -184,6 +206,7 @@ Version 2.0</p>
 
   
 </aside>
+
 
     </div>
   </div>
